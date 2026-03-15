@@ -1,0 +1,18 @@
+{
+  "lastUpdated": "2026-03-15T08:30:00-05:00",
+  "jobs": [
+    {
+      "id": "sample-001",
+      "title": "Data Analyst",
+      "company": "Sample Company",
+      "city": "San Francisco",
+      "state": "CA",
+      "workMode": "Hybrid",
+      "salary": "$100,000 - $130,000",
+      "postedAt": "2026-03-14T08:00:00-05:00",
+      "source": "Sample Feed",
+      "url": "https://example.com/jobs/sample-001",
+      "snippet": "Sample fallback job used when the main feed is unavailable."
+    }
+  ]
+}

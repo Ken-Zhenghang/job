@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>美国数据分析岗位雷达</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">Daily US Job Radar</p>
+      <h1>美国数据分析岗位雷达</h1>
+      <p class="hero-copy">
+        聚合美国最新数据分析岗位，默认关注洛杉矶、圣何塞和旧金山。
+        页面会记录你上次查看的岗位，如果有新增职位，可以通过浏览器通知提醒你。
+      </p>
+      <div class="hero-actions">
+        <button id="enableNotifications" class="primary-button">开启通知</button>
+        <button id="refreshJobs" class="secondary-button">刷新岗位</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel controls-panel">
+        <div class="filters">
+          <label>
+            关键词
+            <input id="keywordInput" type="search" placeholder="例如：data analyst / business analyst">
+          </label>
+          <label>
+            城市
+            <select id="cityFilter">
+              <option value="all">全部城市</option>
+            </select>
+          </label>
+          <label>
+            工作方式
+            <select id="workModeFilter">
+              <option value="all">全部</option>
+              <option value="Remote">Remote</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="On-site">On-site</option>
+            </select>
+          </label>
+          <label>
+            最近发布时间
+            <select id="ageFilter">
+              <option value="all">不限</option>
+              <option value="1">24 小时内</option>
+              <option value="3">3 天内</option>
+              <option value="7">7 天内</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="summary-grid">
+          <article class="summary-card">
+            <span class="summary-label">当前岗位数</span>
+            <strong id="jobCount">0</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">新增岗位</span>
+            <strong id="newCount">0</strong>
+          </article>
+          <article class="summary-card">
+            <span class="summary-label">最近同步</span>
+            <strong id="lastUpdated">-</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-header">
+          <div>
+            <p class="section-kicker">Curated Feed</p>
+            <h2>岗位列表</h2>
+          </div>
+          <p id="statusText" class="status-text">正在加载岗位...</p>
+        </div>
+        <div id="jobsGrid" class="jobs-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-header">
+          <div>
+            <p class="section-kicker">Source Strategy</p>
+            <h2>数据来源</h2>
+          </div>
+        </div>
+        <div class="source-grid">
+          <article class="source-card">
+            <h3>稳定主源</h3>
+            <p>公司官网、Greenhouse、Lever、Ashby。这类职位页最适合做每日抓取和稳定推送。</p>
+          </article>
+          <article class="source-card">
+            <h3>补充发现源</h3>
+            <p>Indeed、LinkedIn、Glassdoor 适合做补充发现，但反爬更强，不建议作为唯一主数据源。</p>
+          </article>
+          <article class="source-card">
+            <h3>推送方式</h3>
+            <p>默认推荐企业微信机器人 webhook。个人微信直推通常需要额外桥接服务，不作为默认方案。</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="jobCardTemplate">
+    <article class="job-card">
+      <div class="job-card-top">
+        <div>
+          <p class="job-company"></p>
+          <h3 class="job-title"></h3>
+        </div>
+        <span class="job-age"></span>
+      </div>
+      <div class="job-meta"></div>
+      <p class="job-snippet"></p>
+      <div class="job-footer">
+        <span class="job-source"></span>
+        <a class="job-link" target="_blank" rel="noreferrer">查看岗位</a>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
