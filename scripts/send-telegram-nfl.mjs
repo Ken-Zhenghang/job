@@ -38,22 +38,33 @@ console.log("NFL Telegram summary sent.");
 async function buildOffseasonDigest() {
   const [transactions, news] = await Promise.all([
     fetchEspnTransactions(),
-    fetchNflNews(),
+    fetchCombinedNews(),
   ]);
 
   const trades = transactions.filter((item) => /(traded|acquired)/i.test(item.text));
-  const injuries = transactions.filter((item) => /(injured reserve|reserve\/injured|physically unable|non-football injury|injury|concussion)/i.test(item.text));
+  const injuries = transactions.filter((item) => /(injured reserve|reserve\/injured|physically unable|non-football injury|injury|concussion|NFI|PUP)/i.test(item.text));
   const cuts = transactions.filter((item) => /(released|waived|terminated|cut)/i.test(item.text));
   const signings = transactions.filter((item) => !trades.includes(item) && !injuries.includes(item) && !cuts.includes(item));
+  const top3 = buildTopStories({ trades, injuries, cuts, signings, news });
 
   const lines = [
     "<b>NFL 每日简报</b>",
-    "<i>休赛期模式: 交易 / 签约 / 重磅新闻</i>",
+    "<i>休赛期模式: 交易 / 伤病 / 裁员 / 新闻</i>",
     `更新时间: <code>${formatDate(new Date().toISOString())}</code>`,
     "",
-    "<b>一、交易</b>",
+    "<b>今日重点 3 条</b>",
   ];
 
+  if (top3.length === 0) {
+    lines.push("• 暂无足够内容生成今日重点");
+  } else {
+    top3.forEach((item, index) => {
+      lines.push(`${index + 1}. ${item}`);
+    });
+  }
+
+  lines.push("");
+  lines.push("<b>一、交易</b>");
   appendTransactionSection(lines, trades, "暂无抓到新的交易摘要");
 
   lines.push("");
@@ -70,20 +81,13 @@ async function buildOffseasonDigest() {
 
   lines.push("");
   lines.push("<b>五、重磅新闻</b>");
-
-  if (news.length === 0) {
-    lines.push("• 暂无抓到新的头条新闻");
-  } else {
-    news.slice(0, 6).forEach((item, index) => {
-      lines.push(`${index + 1}. <a href="${item.url}">${escapeHtml(item.title)}</a>`);
-      lines.push(`   ${escapeHtml(item.dateLabel)}`);
-    });
-  }
+  appendNewsSection(lines, news, 6);
 
   lines.push("");
   lines.push("<b>来源</b>");
   lines.push("• ESPN Transactions");
-  lines.push("• NFL News");
+  lines.push("• NFL.com");
+  lines.push("• ProFootballTalk");
 
   return lines.join("\n");
 }
@@ -91,56 +95,46 @@ async function buildOffseasonDigest() {
 async function buildInSeasonDigest() {
   const [scoreboard, news] = await Promise.all([
     fetchEspnScoreboard(),
-    fetchNflNews(),
+    fetchCombinedNews(),
   ]);
 
   const completed = scoreboard.filter((game) => game.state === "post").slice(0, 6);
   const upcoming = scoreboard.filter((game) => game.state !== "post").slice(0, 6);
+  const top3 = buildInSeasonTopStories({ completed, upcoming, news });
 
   const lines = [
     "<b>NFL 每日简报</b>",
-    "<i>赛季模式: 比分 / 赛程 / 重磅新闻</i>",
+    "<i>赛季模式: 比分 / 赛程 / 新闻</i>",
     `更新时间: <code>${formatDate(new Date().toISOString())}</code>`,
     "",
-    "<b>一、已结束比赛</b>",
+    "<b>今日重点 3 条</b>",
   ];
 
-  if (completed.length === 0) {
-    lines.push("• 暂无已结束比赛");
+  if (top3.length === 0) {
+    lines.push("• 暂无足够内容生成今日重点");
   } else {
-    completed.forEach((game, index) => {
-      lines.push(`${index + 1}. <b>${escapeHtml(game.awayTeam)} ${game.awayScore} - ${game.homeScore} ${escapeHtml(game.homeTeam)}</b>`);
-      lines.push(`   ${escapeHtml(game.status)}`);
+    top3.forEach((item, index) => {
+      lines.push(`${index + 1}. ${item}`);
     });
   }
+
+  lines.push("");
+  lines.push("<b>一、已结束比赛</b>");
+  appendGameSection(lines, completed, "暂无已结束比赛");
 
   lines.push("");
   lines.push("<b>二、即将开始 / 进行中</b>");
-
-  if (upcoming.length === 0) {
-    lines.push("• 暂无即将开始的比赛");
-  } else {
-    upcoming.forEach((game, index) => {
-      lines.push(`${index + 1}. <b>${escapeHtml(game.awayTeam)} vs ${escapeHtml(game.homeTeam)}</b>`);
-      lines.push(`   ${escapeHtml(game.status)}`);
-    });
-  }
+  appendGameSection(lines, upcoming, "暂无即将开始的比赛", true);
 
   lines.push("");
   lines.push("<b>三、重磅新闻</b>");
-
-  if (news.length === 0) {
-    lines.push("• 暂无抓到新的头条新闻");
-  } else {
-    news.slice(0, 5).forEach((item, index) => {
-      lines.push(`${index + 1}. <a href="${item.url}">${escapeHtml(item.title)}</a>`);
-    });
-  }
+  appendNewsSection(lines, news, 5);
 
   lines.push("");
   lines.push("<b>来源</b>");
   lines.push("• ESPN Scoreboard");
-  lines.push("• NFL News");
+  lines.push("• NFL.com");
+  lines.push("• ProFootballTalk");
 
   return lines.join("\n");
 }
@@ -173,9 +167,14 @@ async function fetchEspnTransactions() {
 
     const team = teamMatch[1].trim();
     const actionText = text.slice(team.length).trim();
-    items.push({ team, text: actionText });
+    items.push({
+      team,
+      text: actionText,
+      source: "ESPN Transactions",
+      teamTags: detectTeams(`${team} ${actionText}`),
+    });
 
-    if (items.length >= 12) {
+    if (items.length >= 16) {
       break;
     }
   }
@@ -186,7 +185,7 @@ async function fetchEspnTransactions() {
 async function fetchNflNews() {
   const response = await fetch("https://www.nfl.com/news/");
   if (!response.ok) {
-    throw new Error(`NFL news fetch failed: ${response.status}`);
+    return [];
   }
 
   const html = await response.text();
@@ -201,11 +200,50 @@ async function fetchNflNews() {
         title: decodeHtml(title.trim()),
         url: href.startsWith("http") ? href : `https://www.nfl.com${href}`,
         dateLabel: extractDateLabel(match[0]),
+        source: "NFL.com",
+        teamTags: detectTeams(title),
       });
     }
   }
 
-  return dedupeBy(items, (item) => item.url).slice(0, 10);
+  return dedupeBy(items, (item) => item.url).slice(0, 12);
+}
+
+async function fetchPftNews() {
+  const response = await fetch("https://profootballtalk.nbcsports.com/feed/");
+  if (!response.ok) {
+    return [];
+  }
+
+  const xml = await response.text();
+  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((match) => match[1]);
+
+  return items.map((item) => {
+    const title = readXmlTag(item, "title");
+    const url = readXmlTag(item, "link");
+    const dateLabel = readXmlTag(item, "pubDate");
+
+    return {
+      title: decodeHtml(title),
+      url,
+      dateLabel,
+      source: "ProFootballTalk",
+      teamTags: detectTeams(title),
+    };
+  }).filter((item) => item.title && item.url).slice(0, 12);
+}
+
+async function fetchCombinedNews() {
+  const results = await Promise.allSettled([
+    fetchNflNews(),
+    fetchPftNews(),
+  ]);
+
+  const merged = results
+    .filter((result) => result.status === "fulfilled")
+    .flatMap((result) => result.value);
+
+  return dedupeBy(merged, (item) => item.url).slice(0, 14);
 }
 
 async function fetchEspnScoreboard() {
@@ -230,8 +268,88 @@ async function fetchEspnScoreboard() {
       homeScore: home?.score ?? "-",
       state: competition?.status?.type?.state ?? "pre",
       status: competition?.status?.type?.shortDetail ?? competition?.status?.type?.description ?? "TBD",
+      teamTags: [away?.team?.abbreviation, home?.team?.abbreviation].filter(Boolean),
     };
   });
+}
+
+function appendTransactionSection(lines, items, emptyText) {
+  if (items.length === 0) {
+    lines.push(`• ${emptyText}`);
+    return;
+  }
+
+  items.slice(0, 6).forEach((item, index) => {
+    lines.push(`${index + 1}. ${renderTeamTag(item.teamTags)} <b>${escapeHtml(item.team)}</b>`);
+    lines.push(`   ${escapeHtml(item.text)}`);
+    lines.push(`   ${escapeHtml(item.source)}`);
+  });
+}
+
+function appendNewsSection(lines, items, limit) {
+  if (items.length === 0) {
+    lines.push("• 暂无抓到新的头条新闻");
+    return;
+  }
+
+  items.slice(0, limit).forEach((item, index) => {
+    lines.push(`${index + 1}. ${renderTeamTag(item.teamTags)} <a href="${item.url}">${escapeHtml(item.title)}</a>`);
+    lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
+  });
+}
+
+function appendGameSection(lines, items, emptyText, upcoming = false) {
+  if (items.length === 0) {
+    lines.push(`• ${emptyText}`);
+    return;
+  }
+
+  items.forEach((game, index) => {
+    if (upcoming) {
+      lines.push(`${index + 1}. ${renderTeamTag(game.teamTags)} <b>${escapeHtml(game.awayTeam)} vs ${escapeHtml(game.homeTeam)}</b>`);
+    } else {
+      lines.push(`${index + 1}. ${renderTeamTag(game.teamTags)} <b>${escapeHtml(game.awayTeam)} ${game.awayScore} - ${game.homeScore} ${escapeHtml(game.homeTeam)}</b>`);
+    }
+    lines.push(`   ${escapeHtml(game.status)}`);
+  });
+}
+
+function buildTopStories({ trades, injuries, cuts, signings, news }) {
+  const highlights = [];
+
+  if (trades[0]) {
+    highlights.push(`${renderPlainTag(trades[0].teamTags)} 交易: ${trimSentence(trades[0].text)}`);
+  }
+  if (signings[0]) {
+    highlights.push(`${renderPlainTag(signings[0].teamTags)} 签约: ${trimSentence(signings[0].text)}`);
+  }
+  if (news[0]) {
+    highlights.push(`${renderPlainTag(news[0].teamTags)} 新闻: ${trimSentence(news[0].title, 70)}`);
+  }
+  if (injuries[0] && highlights.length < 3) {
+    highlights.push(`${renderPlainTag(injuries[0].teamTags)} 伤病: ${trimSentence(injuries[0].text)}`);
+  }
+  if (cuts[0] && highlights.length < 3) {
+    highlights.push(`${renderPlainTag(cuts[0].teamTags)} 裁员: ${trimSentence(cuts[0].text)}`);
+  }
+
+  return highlights.slice(0, 3);
+}
+
+function buildInSeasonTopStories({ completed, upcoming, news }) {
+  const highlights = [];
+
+  if (completed[0]) {
+    highlights.push(`${renderPlainTag(completed[0].teamTags)} 比分: ${completed[0].awayTeam} ${completed[0].awayScore} - ${completed[0].homeScore} ${completed[0].homeTeam}`);
+  }
+  if (upcoming[0]) {
+    highlights.push(`${renderPlainTag(upcoming[0].teamTags)} 赛程: ${upcoming[0].awayTeam} vs ${upcoming[0].homeTeam}`);
+  }
+  if (news[0]) {
+    highlights.push(`${renderPlainTag(news[0].teamTags)} 新闻: ${trimSentence(news[0].title, 70)}`);
+  }
+
+  return highlights.slice(0, 3);
 }
 
 function isInSeason(date) {
@@ -252,8 +370,13 @@ function extractDateLabel(value) {
   return match ? match[0] : "";
 }
 
+function readXmlTag(xml, tag) {
+  const match = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, "i"));
+  return match ? match[1].replace(/<!\\[CDATA\\[|\\]\\]>/g, "").trim() : "";
+}
+
 function decodeHtml(value) {
-  return value
+  return String(value)
     .replace(/&amp;/g, "&")
     .replace(/&#x27;/g, "'")
     .replace(/&quot;/g, "\"")
@@ -272,16 +395,35 @@ function dedupeBy(items, keyFn) {
   });
 }
 
-function appendTransactionSection(lines, items, emptyText) {
-  if (items.length === 0) {
-    lines.push(`• ${emptyText}`);
-    return;
-  }
+function detectTeams(value) {
+  const text = String(value).toLowerCase();
+  return TEAM_PATTERNS.filter((item) => item.pattern.test(text)).map((item) => item.tag).slice(0, 2);
+}
 
-  items.slice(0, 6).forEach((item, index) => {
-    lines.push(`${index + 1}. <b>${escapeHtml(item.team)}</b>`);
-    lines.push(`   ${escapeHtml(item.text)}`);
-  });
+function renderTeamTag(tags) {
+  const values = Array.isArray(tags) ? tags : [tags];
+  const filtered = values.filter(Boolean).slice(0, 2);
+  if (filtered.length === 0) {
+    return "<code>LEAGUE</code>";
+  }
+  return filtered.map((tag) => `<code>${escapeHtml(tag)}</code>`).join(" ");
+}
+
+function renderPlainTag(tags) {
+  const values = Array.isArray(tags) ? tags : [tags];
+  const filtered = values.filter(Boolean).slice(0, 2);
+  if (filtered.length === 0) {
+    return "[LEAGUE]";
+  }
+  return filtered.map((tag) => `[${tag}]`).join("");
+}
+
+function trimSentence(value, max = 90) {
+  const text = String(value).replace(/\s+/g, " ").trim();
+  if (text.length <= max) {
+    return text;
+  }
+  return `${text.slice(0, max - 1)}…`;
 }
 
 function escapeHtml(value) {
@@ -290,3 +432,38 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+
+const TEAM_PATTERNS = [
+  { tag: "ARI", pattern: /\barizona\b|\bcardinals\b/ },
+  { tag: "ATL", pattern: /\batlanta\b|\bfalcons\b/ },
+  { tag: "BAL", pattern: /\bbaltimore\b|\bravens\b/ },
+  { tag: "BUF", pattern: /\bbuffalo\b|\bbills\b/ },
+  { tag: "CAR", pattern: /\bcarolina\b|\bpanthers\b/ },
+  { tag: "CHI", pattern: /\bchicago\b|\bbears\b/ },
+  { tag: "CIN", pattern: /\bcincinnati\b|\bbengals\b/ },
+  { tag: "CLE", pattern: /\bcleveland\b|\bbrowns\b/ },
+  { tag: "DAL", pattern: /\bdallas\b|\bcowboys\b/ },
+  { tag: "DEN", pattern: /\bdenver\b|\bbroncos\b/ },
+  { tag: "DET", pattern: /\bdetroit\b|\blions\b/ },
+  { tag: "GB", pattern: /\bgreen bay\b|\bpackers\b/ },
+  { tag: "HOU", pattern: /\bhouston\b|\btexans\b/ },
+  { tag: "IND", pattern: /\bindianapolis\b|\bcolts\b/ },
+  { tag: "JAX", pattern: /\bjacksonville\b|\bjaguars\b/ },
+  { tag: "KC", pattern: /\bkansas city\b|\bchiefs\b/ },
+  { tag: "LV", pattern: /\blas vegas\b|\braiders\b/ },
+  { tag: "LAC", pattern: /\bchargers\b/ },
+  { tag: "LAR", pattern: /\brams\b/ },
+  { tag: "MIA", pattern: /\bmiami\b|\bdolphins\b/ },
+  { tag: "MIN", pattern: /\bminnesota\b|\bvikings\b/ },
+  { tag: "NE", pattern: /\bpatriots\b|\bnew england\b/ },
+  { tag: "NO", pattern: /\bsaints\b|\bnew orleans\b/ },
+  { tag: "NYG", pattern: /\bgiants\b/ },
+  { tag: "NYJ", pattern: /\bjets\b/ },
+  { tag: "PHI", pattern: /\beagles\b|\bphiladelphia\b/ },
+  { tag: "PIT", pattern: /\bsteelers\b|\bpittsburgh\b/ },
+  { tag: "SEA", pattern: /\bseahawks\b|\bseattle\b/ },
+  { tag: "SF", pattern: /\b49ers\b|\bsan francisco\b/ },
+  { tag: "TB", pattern: /\bbuccaneers\b|\btampa bay\b/ },
+  { tag: "TEN", pattern: /\btitans\b|\btennessee\b/ },
+  { tag: "WAS", pattern: /\bcommanders\b|\bwashington\b/ },
+];
