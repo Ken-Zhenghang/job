@@ -1,6 +1,6 @@
-# 美国数据分析岗位雷达
+# 每日推送中心
 
-一个轻量网页，用来追踪美国数据分析相关岗位，默认聚焦以下城市：
+一个轻量网页，用来追踪美国数据分析相关岗位，并承载 Telegram 每日推送：
 
 - Los Angeles
 - San Jose
@@ -9,8 +9,8 @@
 当前计划对接的 GitHub 仓库：
 
 - 用户名：`Ken-Zhenghang`
-- 仓库名：`job`
-- 仓库地址：`https://github.com/Ken-Zhenghang/job`
+- 当前仓库名：`job`
+- 当前仓库地址：`https://github.com/Ken-Zhenghang/job`
 
 ## 现在能做什么
 
@@ -174,6 +174,14 @@ https://ken-zhenghang.github.io/job/
 ```
 
 部署工作流文件在 `.github/workflows/deploy-pages.yml`。
+
+如果你后面想把仓库名从 `job` 改掉，建议使用 ASCII 名称，避免 URL 和脚本兼容性问题。例如：
+
+- `daily-push`
+- `daily-digest`
+- `daily-radar`
+
+页面标题我已经改成了“每日推送中心”，但 GitHub 仓库真正改名需要你在 GitHub 网页端手动执行。
 
 注意：
 

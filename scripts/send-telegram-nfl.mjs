@@ -23,6 +23,7 @@ const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessag
   body: JSON.stringify({
     chat_id: chatId,
     text: digest.slice(0, 3900),
+    parse_mode: "HTML",
     disable_web_page_preview: true,
   }),
 });
@@ -41,39 +42,38 @@ async function buildOffseasonDigest() {
   ]);
 
   const lines = [
-    "NFL 每日简报",
-    "模式: 休赛期交易 + 重磅新闻",
-    `更新时间: ${formatDate(new Date().toISOString())}`,
+    "<b>NFL 每日简报</b>",
+    "<i>休赛期模式: 交易 / 签约 / 重磅新闻</i>",
+    `更新时间: <code>${formatDate(new Date().toISOString())}</code>`,
     "",
-    "一、今日交易 / 签约",
+    "<b>一、今日交易 / 签约</b>",
   ];
 
   if (transactions.length === 0) {
-    lines.push("暂无抓到新的交易或签约摘要");
+    lines.push("• 暂无抓到新的交易或签约摘要");
   } else {
     transactions.slice(0, 8).forEach((item, index) => {
-      lines.push(`${index + 1}. ${item.team}`);
-      lines.push(`   ${item.text}`);
+      lines.push(`${index + 1}. <b>${escapeHtml(item.team)}</b>`);
+      lines.push(`   ${escapeHtml(item.text)}`);
     });
   }
 
   lines.push("");
-  lines.push("二、重磅新闻");
+  lines.push("<b>二、重磅新闻</b>");
 
   if (news.length === 0) {
-    lines.push("暂无抓到新的头条新闻");
+    lines.push("• 暂无抓到新的头条新闻");
   } else {
     news.slice(0, 6).forEach((item, index) => {
-      lines.push(`${index + 1}. ${item.title}`);
-      lines.push(`   ${item.dateLabel}`);
-      lines.push(`   ${item.url}`);
+      lines.push(`${index + 1}. <a href="${item.url}">${escapeHtml(item.title)}</a>`);
+      lines.push(`   ${escapeHtml(item.dateLabel)}`);
     });
   }
 
   lines.push("");
-  lines.push("来源:");
-  lines.push("ESPN Transactions: https://www.espn.com/nfl/transactions");
-  lines.push("NFL News: https://www.nfl.com/news/");
+  lines.push("<b>来源</b>");
+  lines.push("• ESPN Transactions");
+  lines.push("• NFL News");
 
   return lines.join("\n");
 }
@@ -88,50 +88,49 @@ async function buildInSeasonDigest() {
   const upcoming = scoreboard.filter((game) => game.state !== "post").slice(0, 6);
 
   const lines = [
-    "NFL 每日简报",
-    "模式: 比赛数据 + 重磅新闻",
-    `更新时间: ${formatDate(new Date().toISOString())}`,
+    "<b>NFL 每日简报</b>",
+    "<i>赛季模式: 比分 / 赛程 / 重磅新闻</i>",
+    `更新时间: <code>${formatDate(new Date().toISOString())}</code>`,
     "",
-    "一、已结束比赛",
+    "<b>一、已结束比赛</b>",
   ];
 
   if (completed.length === 0) {
-    lines.push("暂无已结束比赛");
+    lines.push("• 暂无已结束比赛");
   } else {
     completed.forEach((game, index) => {
-      lines.push(`${index + 1}. ${game.awayTeam} ${game.awayScore} - ${game.homeScore} ${game.homeTeam}`);
-      lines.push(`   ${game.status}`);
+      lines.push(`${index + 1}. <b>${escapeHtml(game.awayTeam)} ${game.awayScore} - ${game.homeScore} ${escapeHtml(game.homeTeam)}</b>`);
+      lines.push(`   ${escapeHtml(game.status)}`);
     });
   }
 
   lines.push("");
-  lines.push("二、即将开始 / 进行中");
+  lines.push("<b>二、即将开始 / 进行中</b>");
 
   if (upcoming.length === 0) {
-    lines.push("暂无即将开始的比赛");
+    lines.push("• 暂无即将开始的比赛");
   } else {
     upcoming.forEach((game, index) => {
-      lines.push(`${index + 1}. ${game.awayTeam} vs ${game.homeTeam}`);
-      lines.push(`   ${game.status}`);
+      lines.push(`${index + 1}. <b>${escapeHtml(game.awayTeam)} vs ${escapeHtml(game.homeTeam)}</b>`);
+      lines.push(`   ${escapeHtml(game.status)}`);
     });
   }
 
   lines.push("");
-  lines.push("三、重磅新闻");
+  lines.push("<b>三、重磅新闻</b>");
 
   if (news.length === 0) {
-    lines.push("暂无抓到新的头条新闻");
+    lines.push("• 暂无抓到新的头条新闻");
   } else {
     news.slice(0, 5).forEach((item, index) => {
-      lines.push(`${index + 1}. ${item.title}`);
-      lines.push(`   ${item.url}`);
+      lines.push(`${index + 1}. <a href="${item.url}">${escapeHtml(item.title)}</a>`);
     });
   }
 
   lines.push("");
-  lines.push("来源:");
-  lines.push("ESPN Scoreboard: https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard");
-  lines.push("NFL News: https://www.nfl.com/news/");
+  lines.push("<b>来源</b>");
+  lines.push("• ESPN Scoreboard");
+  lines.push("• NFL News");
 
   return lines.join("\n");
 }
@@ -261,4 +260,11 @@ function dedupeBy(items, keyFn) {
     seen.add(key);
     return true;
   });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
