@@ -9,8 +9,8 @@
 当前计划对接的 GitHub 仓库：
 
 - 用户名：`Ken-Zhenghang`
-- 当前仓库名：`job`
-- 当前仓库地址：`https://github.com/Ken-Zhenghang/job`
+- 当前仓库名：`daily-push`
+- 当前仓库地址：`https://github.com/Ken-Zhenghang/daily-push`
 
 ## 现在能做什么
 
@@ -170,18 +170,12 @@ SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weix
 如果走 GitHub Pages，固定网址会是：
 
 ```text
-https://ken-zhenghang.github.io/job/
+https://ken-zhenghang.github.io/daily-push/
 ```
 
 部署工作流文件在 `.github/workflows/deploy-pages.yml`。
 
-如果你后面想把仓库名从 `job` 改掉，建议使用 ASCII 名称，避免 URL 和脚本兼容性问题。例如：
-
-- `daily-push`
-- `daily-digest`
-- `daily-radar`
-
-页面标题我已经改成了“每日推送中心”，但 GitHub 仓库真正改名需要你在 GitHub 网页端手动执行。
+页面标题我已经改成了“每日推送中心”。如果你把 GitHub 仓库真正改名为 `daily-push`，这里的地址也会对应生效。
 
 注意：
 
