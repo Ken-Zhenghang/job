@@ -66,6 +66,7 @@ async function buildAiDigest() {
     top3.forEach((item, index) => {
       lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${item.url}">${escapeHtml(item.title)}</a>`);
       lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
+      lines.push(`   ${escapeHtml(buildCommentary(item))}`);
     });
   }
 
@@ -91,6 +92,7 @@ async function buildAiDigest() {
     industry.forEach((item, index) => {
       lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${item.url}">${escapeHtml(item.title)}</a>`);
       lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
+      lines.push(`   ${escapeHtml(buildCommentary(item))}`);
     });
   }
 
@@ -118,6 +120,7 @@ function appendCompanySection(lines, title, items) {
   items.slice(0, 3).forEach((item, index) => {
     lines.push(`${index + 1}. ${renderCategoryTag(item.category)} <a href="${item.url}">${escapeHtml(item.title)}</a>`);
     lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
+    lines.push(`   ${escapeHtml(buildCommentary(item))}`);
   });
 }
 
@@ -129,37 +132,26 @@ function appendCategorySummary(lines, label, items) {
 
   const top = items[0];
   lines.push(`• ${label}: ${renderSourceTag(top.company)} <a href="${top.url}">${escapeHtml(trimText(top.title, 72))}</a>`);
+  lines.push(`  ${escapeHtml(buildCommentary(top))}`);
 }
 
 function buildTopStories(items) {
-  const scored = items
+  return items
     .map((item) => ({ item, score: scoreItem(item) }))
     .sort((left, right) => right.score - left.score)
-    .map((entry) => entry.item);
-
-  return scored.slice(0, 3);
+    .map((entry) => entry.item)
+    .slice(0, 3);
 }
 
 function scoreItem(item) {
   let score = 0;
-  if (item.company === "OpenAI") {
-    score += 50;
-  }
-  if (item.company === "Anthropic") {
-    score += 30;
-  }
-  if (item.category === "model_updates") {
-    score += 25;
-  }
-  if (item.category === "product_launches") {
-    score += 20;
-  }
-  if (item.category === "policy_safety") {
-    score += 10;
-  }
-  if (item.source === "TechCrunch AI") {
-    score += 5;
-  }
+  if (item.company === "OpenAI") score += 50;
+  if (item.company === "Anthropic") score += 30;
+  if (item.company === "Google DeepMind") score += 25;
+  if (item.category === "model_updates") score += 25;
+  if (item.category === "product_launches") score += 20;
+  if (item.category === "policy_safety") score += 10;
+  if (item.source === "TechCrunch AI") score += 5;
   return score;
 }
 
@@ -172,15 +164,30 @@ function groupByCategory(items) {
   };
 }
 
-async function fetchOpenAiNews() {
-  const response = await fetch("https://openai.com/news");
-  if (!response.ok) {
-    return [];
+function buildCommentary(item) {
+  const company = item.company || "行业";
+
+  if (item.category === "model_updates") {
+    return `${company} 这条更偏模型能力升级，重点看推理、多模态、成本或速度有没有实质变化。`;
+  }
+  if (item.category === "product_launches") {
+    return `${company} 这条更偏产品发布或功能落地，关键看是否已经从演示阶段进入可用阶段。`;
+  }
+  if (item.category === "funding_business") {
+    return `${company} 这条更偏商业化和资本动作，适合判断客户扩张、收入潜力和竞争格局。`;
+  }
+  if (item.category === "policy_safety") {
+    return `${company} 这条更偏政策、安全或监管，往往会直接影响模型发布节奏和落地范围。`;
   }
 
+  return `${company} 这条值得关注它会不会影响模型能力、产品落地，或者行业竞争。`;
+}
+
+async function fetchOpenAiNews() {
+  const response = await fetch("https://openai.com/news");
+  if (!response.ok) return [];
   const html = await response.text();
   const blocks = [...html.matchAll(/href="(\/(?:index|news)\/[^"]+)"[\s\S]{0,500}?>([^<]+)<\/a>[\s\S]{0,200}?(Company|Research|Product|Safety|Security|Global Affairs|AI Adoption|Engineering|Release|Publication|Announcements)?[\s\S]{0,120}?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/g)];
-
   return normalizeItems(blocks.map((match) => {
     const [, href, title, section] = match;
     return {
@@ -196,13 +203,9 @@ async function fetchOpenAiNews() {
 
 async function fetchAnthropicNews() {
   const response = await fetch("https://www.anthropic.com/news");
-  if (!response.ok) {
-    return [];
-  }
-
+  if (!response.ok) return [];
   const html = await response.text();
   const blocks = [...html.matchAll(/href="(\/news\/[^"]+)"[\s\S]{0,300}?>([^<]+)<\/a>[\s\S]{0,180}?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/g)];
-
   return normalizeItems(blocks.map((match) => {
     const [, href, title] = match;
     return {
@@ -217,13 +220,9 @@ async function fetchAnthropicNews() {
 
 async function fetchDeepMindNews() {
   const response = await fetch("https://deepmind.google/discover/blog/");
-  if (!response.ok) {
-    return [];
-  }
-
+  if (!response.ok) return [];
   const html = await response.text();
   const blocks = [...html.matchAll(/href="(\/discover\/blog\/[^"]+)"[\s\S]{0,400}?>([^<]+)<\/a>[\s\S]{0,150}?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/g)];
-
   return normalizeItems(blocks.map((match) => {
     const [, href, title] = match;
     return {
@@ -238,13 +237,9 @@ async function fetchDeepMindNews() {
 
 async function fetchMetaAiNews() {
   const response = await fetch("https://ai.meta.com/blog/");
-  if (!response.ok) {
-    return [];
-  }
-
+  if (!response.ok) return [];
   const html = await response.text();
   const blocks = [...html.matchAll(/href="(https:\/\/ai\.meta\.com\/blog\/[^"]+|\/blog\/[^"]+)"[\s\S]{0,300}?>([^<]+)<\/a>[\s\S]{0,150}?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/g)];
-
   return normalizeItems(blocks.map((match) => {
     const [, href, title] = match;
     return {
@@ -259,13 +254,9 @@ async function fetchMetaAiNews() {
 
 async function fetchXaiNews() {
   const response = await fetch("https://x.ai/news");
-  if (!response.ok) {
-    return [];
-  }
-
+  if (!response.ok) return [];
   const html = await response.text();
   const blocks = [...html.matchAll(/href="(\/news\/[^"]+)"[\s\S]{0,300}?>([^<]+)<\/a>[\s\S]{0,160}?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/g)];
-
   return normalizeItems(blocks.map((match) => {
     const [, href, title] = match;
     return {
@@ -280,13 +271,9 @@ async function fetchXaiNews() {
 
 async function fetchTechCrunchAiNews() {
   const response = await fetch("https://techcrunch.com/category/artificial-intelligence/feed/");
-  if (!response.ok) {
-    return [];
-  }
-
+  if (!response.ok) return [];
   const xml = await response.text();
   const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((match) => match[1]);
-
   return normalizeItems(items.map((item) => ({
     title: decodeHtml(readXmlTag(item, "title")),
     url: readXmlTag(item, "link"),
@@ -305,20 +292,10 @@ function normalizeItems(items) {
 
 function classifyItem(title) {
   const text = String(title).toLowerCase();
-
-  if (/(model|reasoning|benchmark|training|agent|multimodal|frontier|gpt|claude|gemini|llama|grok)/i.test(text)) {
-    return "model_updates";
-  }
-  if (/(launch|release|rollout|introduc|available|app|api|product|tool|platform|feature)/i.test(text)) {
-    return "product_launches";
-  }
-  if (/(funding|raise|raised|valuation|revenue|partnership|acqui|investment|financing|enterprise)/i.test(text)) {
-    return "funding_business";
-  }
-  if (/(policy|regulat|government|law|safety|security|copyright|compliance|ethics|privacy)/i.test(text)) {
-    return "policy_safety";
-  }
-
+  if (/(model|reasoning|benchmark|training|agent|multimodal|frontier|gpt|claude|gemini|llama|grok)/i.test(text)) return "model_updates";
+  if (/(launch|release|rollout|introduc|available|app|api|product|tool|platform|feature)/i.test(text)) return "product_launches";
+  if (/(funding|raise|raised|valuation|revenue|partnership|acqui|investment|financing|enterprise)/i.test(text)) return "funding_business";
+  if (/(policy|regulat|government|law|safety|security|copyright|compliance|ethics|privacy)/i.test(text)) return "policy_safety";
   return "product_launches";
 }
 
@@ -354,9 +331,7 @@ function dedupeBy(items, keyFn) {
   const seen = new Set();
   return items.filter((item) => {
     const key = keyFn(item);
-    if (seen.has(key)) {
-      return false;
-    }
+    if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
@@ -380,9 +355,7 @@ function formatDate(value) {
 
 function trimText(value, max) {
   const text = String(value).replace(/\s+/g, " ").trim();
-  if (text.length <= max) {
-    return text;
-  }
+  if (text.length <= max) return text;
   return `${text.slice(0, max - 1)}…`;
 }
 
