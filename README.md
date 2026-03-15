@@ -127,13 +127,13 @@ SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weix
 
 ## 邮件推送
 
-如果你不想接企业微信，建议直接用邮箱。以 Gmail 为例，你只需要在 GitHub Secrets 里配置：
+如果你不想接企业微信，建议直接用邮箱。以 Outlook 为例，你只需要在 GitHub Secrets 里配置：
 
-- `SMTP_HOST=smtp.gmail.com`
-- `SMTP_PORT=465`
-- `SMTP_USER=你的 Gmail`
-- `SMTP_PASS=你的 Gmail App Password`
-- `MAIL_FROM=你的 Gmail`
+- `SMTP_HOST=smtp-mail.outlook.com`
+- `SMTP_PORT=587`
+- `SMTP_USER=你的 Outlook 邮箱`
+- `SMTP_PASS=你的 Outlook 密码或应用专用密码`
+- `MAIL_FROM=你的 Outlook 邮箱`
 - `MAIL_TO=接收日报的邮箱`
 
 然后每日工作流会自动发送岗位摘要邮件。

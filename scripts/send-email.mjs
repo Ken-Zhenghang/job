@@ -5,7 +5,7 @@ import path from "node:path";
 import process from "node:process";
 
 const smtpHost = process.env.SMTP_HOST;
-const smtpPort = Number(process.env.SMTP_PORT || 465);
+const smtpPort = Number(process.env.SMTP_PORT || 587);
 const smtpUser = process.env.SMTP_USER;
 const smtpPass = process.env.SMTP_PASS;
 const mailFrom = process.env.MAIL_FROM || smtpUser;
@@ -54,7 +54,7 @@ await sendEmail({
 console.log("Email summary sent.");
 
 async function sendEmail({ host, port, user, pass, from, to, subject, body }) {
-  const socket = port === 465
+  let socket = port === 465
     ? tls.connect(port, host, { servername: host })
     : net.connect(port, host);
 
