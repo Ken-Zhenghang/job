@@ -29,6 +29,7 @@ const EXCLUDED_TITLE_PATTERNS = [
   /sourcing/i,
   /manager/i,
   /scientist/i,
+  /operations performance/i,
 ];
 
 const GREENHOUSE_SOURCES = [
@@ -39,6 +40,12 @@ const GREENHOUSE_SOURCES = [
   { boardToken: "calendly", company: "Calendly" },
   { boardToken: "redcircle", company: "RedCircle" },
   { boardToken: "crunchyroll", company: "Crunchyroll" },
+  { boardToken: "scaleai", company: "Scale AI" },
+  { boardToken: "intercom", company: "Intercom" },
+  { boardToken: "growtherapy", company: "Grow Therapy" },
+  { boardToken: "glossgenius", company: "GlossGenius" },
+  { boardToken: "figma", company: "Figma" },
+  { boardToken: "chime", company: "Chime" },
 ];
 
 const LEVER_SOURCES = [];
@@ -63,6 +70,7 @@ const collected = await Promise.all([
 
 const jobs = dedupeJobs(collected.flat())
   .filter(isRelevantJob)
+  .filter((job) => daysSince(job.postedAt) <= 30)
   .sort((left, right) => new Date(right.postedAt) - new Date(left.postedAt));
 
 const payload = {
@@ -289,6 +297,11 @@ function excerpt(value) {
   }
 
   return value.slice(0, 180);
+}
+
+function daysSince(value) {
+  const millisecondsPerDay = 1000 * 60 * 60 * 24;
+  return Math.floor((Date.now() - new Date(value).getTime()) / millisecondsPerDay);
 }
 
 function dedupeJobs(items) {

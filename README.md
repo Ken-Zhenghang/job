@@ -77,6 +77,7 @@ node ./scripts/update-jobs.mjs
 - 补充发现源：Indeed、LinkedIn、Glassdoor
 - 筛选：优先保留 Data Analyst、Senior Data Analyst、Product Analyst、Business Analyst、Marketing Analyst、Analytics Engineer 等贴近数据分析的职位
 - 推送时间：每天早上 9 点，按 `America/Chicago` 时区判断
+- Telegram 日报会按“今日 / 最近 7 天 / 较早但仍可投”分组，优先把新岗位放在最前面
 
 建议把采集命令放进：
 
@@ -109,7 +110,7 @@ node ./scripts/update-jobs.mjs
 
 - 主源：公司官网、Greenhouse、Lever、Ashby
 - 补充源：Indeed、LinkedIn、Glassdoor
-- 推送：企业微信机器人
+- 推送：Telegram
 
 原因是 Indeed、LinkedIn、Glassdoor 反爬更强、页面结构变化更频繁，不适合作为唯一主抓取源。
 
