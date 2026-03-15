@@ -24,7 +24,7 @@ const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessag
   },
   body: JSON.stringify({
     chat_id: chatId,
-    text: digest.slice(0, 3900),
+    text: truncateDigest(digest, 3900),
     parse_mode: "HTML",
     disable_web_page_preview: true,
   }),
@@ -71,7 +71,7 @@ async function buildAiDigest() {
     lines.push("• 暂无抓到 AI 新闻");
   } else {
     top3.forEach((item, index) => {
-      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${item.url}">${escapeHtml(item.title)}</a>`);
+      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(item.title)}</a>`);
       lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
       lines.push(`   ${escapeHtml(buildCommentary(item))}`);
     });
@@ -97,7 +97,7 @@ async function buildAiDigest() {
     lines.push("• 暂无行业补充新闻");
   } else {
     industry.forEach((item, index) => {
-      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${item.url}">${escapeHtml(item.title)}</a>`);
+      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(item.title)}</a>`);
       lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
       lines.push(`   ${escapeHtml(buildCommentary(item))}`);
     });
@@ -125,7 +125,7 @@ function appendCompanySection(lines, title, items) {
   }
 
   items.slice(0, 3).forEach((item, index) => {
-    lines.push(`${index + 1}. ${renderCategoryTag(item.category)} <a href="${item.url}">${escapeHtml(item.title)}</a>`);
+    lines.push(`${index + 1}. ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(item.title)}</a>`);
     lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
     lines.push(`   ${escapeHtml(buildCommentary(item))}`);
   });
@@ -138,7 +138,7 @@ function appendCategorySummary(lines, label, items) {
   }
 
   const top = items[0];
-  lines.push(`• ${label}: ${renderSourceTag(top.company)} <a href="${top.url}">${escapeHtml(trimText(top.title, 72))}</a>`);
+  lines.push(`• ${label}: ${renderSourceTag(top.company)} <a href="${escapeHtmlAttr(top.url)}">${escapeHtml(trimText(top.title, 72))}</a>`);
   lines.push(`  ${escapeHtml(buildCommentary(top))}`);
 }
 
@@ -371,4 +371,31 @@ function escapeHtml(value) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function escapeHtmlAttr(value) {
+  return escapeHtml(value).replace(/"/g, "&quot;");
+}
+
+function truncateDigest(digest, maxLength) {
+  if (digest.length <= maxLength) return digest;
+
+  const lines = digest.split("\n");
+  const kept = [];
+  let currentLength = 0;
+
+  for (const line of lines) {
+    const nextLength = currentLength + line.length + (kept.length > 0 ? 1 : 0);
+    if (nextLength > maxLength - 30) break;
+    kept.push(line);
+    currentLength = nextLength;
+  }
+
+  if (kept.length === 0) {
+    return "<b>AI Morning Brief</b>\n<i>内容过长，已省略。</i>";
+  }
+
+  kept.push("");
+  kept.push("<i>内容已截断，完整内容请看网站或下一次推送。</i>");
+  return kept.join("\n");
 }
