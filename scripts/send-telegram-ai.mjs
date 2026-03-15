@@ -47,21 +47,29 @@ async function buildAiDigest() {
     fetchTechCrunchAiNews(),
   ]);
 
-  const allItems = dedupeBy([
+  const allItems = dedupeAiItems([
     ...openaiNews,
     ...anthropicNews,
     ...deepmindNews,
     ...metaNews,
     ...xaiNews,
     ...techCrunchAiNews,
-  ], (item) => item.url).slice(0, 40);
+  ]).slice(0, 24);
 
   const top3 = buildTopStories(allItems);
-  const categories = groupByCategory(allItems);
+  const topUrls = new Set(top3.map((item) => item.url));
+  const companyItems = pickCompanyItems([
+    ["OpenAI", openaiNews],
+    ["Anthropic", anthropicNews],
+    ["Google DeepMind", deepmindNews],
+    ["Meta", metaNews],
+    ["xAI", xaiNews],
+  ], topUrls);
+  const industry = techCrunchAiNews.filter((item) => !topUrls.has(item.url)).slice(0, 2);
 
   const lines = [
     "<b>AI Morning Brief</b>",
-    "<i>每日 AI 新闻 / 公司分栏 / 分类摘要</i>",
+    "<i>精简版：重点 / 公司动态 / 行业补充</i>",
     `更新时间: <code>${formatDate(new Date().toISOString())}</code>`,
     "",
     "<b>今日重点 3 条</b>",
@@ -71,75 +79,39 @@ async function buildAiDigest() {
     lines.push("• 暂无抓到 AI 新闻");
   } else {
     top3.forEach((item, index) => {
-      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(item.title)}</a>`);
-      lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
-      lines.push(`   ${escapeHtml(buildCommentary(item))}`);
+      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(trimText(item.title, 88))}</a>`);
+      lines.push(`   ${escapeHtml(buildCommentary(item))} · ${escapeHtml(item.source)}`);
     });
   }
 
   lines.push("");
-  lines.push("<b>一、分类摘要</b>");
-  appendCategorySummary(lines, "模型进展", categories.model_updates);
-  appendCategorySummary(lines, "产品发布", categories.product_launches);
-  appendCategorySummary(lines, "融资 / 商业", categories.funding_business);
-  appendCategorySummary(lines, "政策 / 安全", categories.policy_safety);
-
-  appendCompanySection(lines, "二、OpenAI", openaiNews);
-  appendCompanySection(lines, "三、Anthropic", anthropicNews);
-  appendCompanySection(lines, "四、Google DeepMind", deepmindNews);
-  appendCompanySection(lines, "五、Meta", metaNews);
-  appendCompanySection(lines, "六、xAI", xaiNews);
+  lines.push("<b>公司动态</b>");
+  appendCompanyDigest(lines, companyItems);
 
   lines.push("");
-  lines.push("<b>七、行业补充</b>");
-  const industry = techCrunchAiNews.slice(0, 4);
+  lines.push("<b>行业补充</b>");
   if (industry.length === 0) {
-    lines.push("• 暂无行业补充新闻");
+    lines.push("• 暂无额外行业新闻");
   } else {
     industry.forEach((item, index) => {
-      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(item.title)}</a>`);
-      lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
-      lines.push(`   ${escapeHtml(buildCommentary(item))}`);
+      lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(trimText(item.title, 80))}</a>`);
+      lines.push(`   ${escapeHtml(buildCommentary(item))} · ${escapeHtml(item.source)}`);
     });
   }
-
-  lines.push("");
-  lines.push("<b>来源</b>");
-  lines.push("• OpenAI News");
-  lines.push("• Anthropic News");
-  lines.push("• Google DeepMind Blog");
-  lines.push("• Meta AI Blog");
-  lines.push("• xAI News");
-  lines.push("• TechCrunch AI");
 
   return lines.join("\n");
 }
 
-function appendCompanySection(lines, title, items) {
-  lines.push("");
-  lines.push(`<b>${title}</b>`);
-
+function appendCompanyDigest(lines, items) {
   if (items.length === 0) {
-    lines.push("• 暂无新的动态");
+    lines.push("• 暂无新的公司动态");
     return;
   }
 
-  items.slice(0, 3).forEach((item, index) => {
-    lines.push(`${index + 1}. ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(item.title)}</a>`);
-    lines.push(`   ${escapeHtml(item.dateLabel)} | ${escapeHtml(item.source)}`);
-    lines.push(`   ${escapeHtml(buildCommentary(item))}`);
+  items.forEach((item) => {
+    lines.push(`• ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(trimText(item.title, 76))}</a>`);
+    lines.push(`  ${escapeHtml(buildCommentary(item))}`);
   });
-}
-
-function appendCategorySummary(lines, label, items) {
-  if (!items || items.length === 0) {
-    lines.push(`• ${label}: 暂无`);
-    return;
-  }
-
-  const top = items[0];
-  lines.push(`• ${label}: ${renderSourceTag(top.company)} <a href="${escapeHtmlAttr(top.url)}">${escapeHtml(trimText(top.title, 72))}</a>`);
-  lines.push(`  ${escapeHtml(buildCommentary(top))}`);
 }
 
 function buildTopStories(items) {
@@ -162,32 +134,23 @@ function scoreItem(item) {
   return score;
 }
 
-function groupByCategory(items) {
-  return {
-    model_updates: items.filter((item) => item.category === "model_updates").slice(0, 4),
-    product_launches: items.filter((item) => item.category === "product_launches").slice(0, 4),
-    funding_business: items.filter((item) => item.category === "funding_business").slice(0, 4),
-    policy_safety: items.filter((item) => item.category === "policy_safety").slice(0, 4),
-  };
-}
-
 function buildCommentary(item) {
   const company = item.company || "行业";
 
   if (item.category === "model_updates") {
-    return `${company} 这条更偏模型能力升级，重点看推理、多模态、成本或速度有没有实质变化。`;
+    return `${company} 有模型能力更新，重点看性能和可用性。`;
   }
   if (item.category === "product_launches") {
-    return `${company} 这条更偏产品发布或功能落地，关键看是否已经从演示阶段进入可用阶段。`;
+    return `${company} 有产品动作，重点看是否已经正式开放。`;
   }
   if (item.category === "funding_business") {
-    return `${company} 这条更偏商业化和资本动作，适合判断客户扩张、收入潜力和竞争格局。`;
+    return `${company} 有商业化进展，重点看合作、收入或融资。`;
   }
   if (item.category === "policy_safety") {
-    return `${company} 这条更偏政策、安全或监管，往往会直接影响模型发布节奏和落地范围。`;
+    return `${company} 有政策或安全动态，可能影响上线节奏。`;
   }
 
-  return `${company} 这条值得关注它会不会影响模型能力、产品落地，或者行业竞争。`;
+  return `${company} 有值得关注的新动态。`;
 }
 
 async function fetchOpenAiNews() {
@@ -291,10 +254,24 @@ async function fetchTechCrunchAiNews() {
 }
 
 function normalizeItems(items) {
-  return dedupeBy(items.filter((item) => item.title && item.url).map((item) => ({
+  return items.filter((item) => item.title && item.url).map((item) => ({
     ...item,
     category: classifyItem(item.title),
-  })), (item) => item.url);
+  }));
+}
+
+function dedupeAiItems(items) {
+  return dedupeBy(
+    dedupeBy(items, (item) => normalizeTitle(item.title)),
+    (item) => item.url,
+  );
+}
+
+function pickCompanyItems(groups, excludedUrls) {
+  return groups
+    .map(([company, items]) => items.find((item) => item.company === company && !excludedUrls.has(item.url)))
+    .filter(Boolean)
+    .slice(0, 5);
 }
 
 function classifyItem(title) {
@@ -364,6 +341,15 @@ function trimText(value, max) {
   const text = String(value).replace(/\s+/g, " ").trim();
   if (text.length <= max) return text;
   return `${text.slice(0, max - 1)}…`;
+}
+
+function normalizeTitle(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function escapeHtml(value) {
