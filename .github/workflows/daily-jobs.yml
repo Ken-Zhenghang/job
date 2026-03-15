@@ -21,6 +21,10 @@ jobs:
 
       - name: Check Chicago run window
         id: gate
+        env:
+          TARGET_HOUR: 9
+          TARGET_MINUTE: 0
+          BUFFER_MINUTES: 20
         run: node ./scripts/should-run-daily.mjs
 
       - name: Update jobs feed

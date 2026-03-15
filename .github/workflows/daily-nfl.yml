@@ -2,7 +2,7 @@ name: Daily NFL
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "10 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
         env:
           TARGET_HOUR: 9
           TARGET_MINUTE: 10
+          BUFFER_MINUTES: 20
         run: node ./scripts/should-run-daily.mjs
 
       - name: Send NFL Telegram summary
