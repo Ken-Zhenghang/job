@@ -38,12 +38,14 @@ if (!response.ok) {
 console.log("AI Telegram summary sent.");
 
 async function buildAiDigest() {
-  const [openaiNews, anthropicNews, deepmindNews, metaNews, xaiNews, techCrunchAiNews] = await Promise.all([
+  const [openaiNews, anthropicNews, deepmindNews, metaNews, xaiNews, teslaOfficialNews, teslaAutoNews, techCrunchAiNews] = await Promise.all([
     fetchOpenAiNews(),
     fetchAnthropicNews(),
     fetchDeepMindNews(),
     fetchMetaAiNews(),
     fetchXaiNews(),
+    fetchTeslaOfficialNews(),
+    fetchTeslaAutoNews(),
     fetchTechCrunchAiNews(),
   ]);
 
@@ -53,6 +55,8 @@ async function buildAiDigest() {
     ...deepmindNews,
     ...metaNews,
     ...xaiNews,
+    ...teslaOfficialNews,
+    ...teslaAutoNews,
     ...techCrunchAiNews,
   ]).slice(0, 24);
 
@@ -64,6 +68,7 @@ async function buildAiDigest() {
     ["Google DeepMind", deepmindNews],
     ["Meta", metaNews],
     ["xAI", xaiNews],
+    ["Tesla", [...teslaOfficialNews, ...teslaAutoNews]],
   ], topUrls);
   const industry = techCrunchAiNews.filter((item) => !topUrls.has(item.url)).slice(0, 2);
 
@@ -127,6 +132,7 @@ function scoreItem(item) {
   if (item.company === "OpenAI") score += 50;
   if (item.company === "Anthropic") score += 30;
   if (item.company === "Google DeepMind") score += 25;
+  if (item.company === "Tesla") score += 12;
   if (item.category === "model_updates") score += 25;
   if (item.category === "product_launches") score += 20;
   if (item.category === "policy_safety") score += 10;
@@ -148,6 +154,9 @@ function buildCommentary(item) {
   }
   if (item.category === "policy_safety") {
     return `${company} 有政策或安全动态，可能影响上线节奏。`;
+  }
+  if (company === "Tesla") {
+    return "Tesla 有车型、软件或市场评价更新，重点看交付、体验和 FSD 相关变化。";
   }
 
   return `${company} 有值得关注的新动态。`;
@@ -239,6 +248,37 @@ async function fetchXaiNews() {
   })).slice(0, 8);
 }
 
+async function fetchTeslaOfficialNews() {
+  const response = await fetch("https://www.tesla.com/blog");
+  if (!response.ok) return [];
+  const html = await response.text();
+  const blocks = [...html.matchAll(/href="(\/blog\/[^"]+)"[\s\S]{0,400}?>([^<]+)<\/a>[\s\S]{0,220}?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}/g)];
+  return normalizeItems(blocks.map((match) => {
+    const [, href, title] = match;
+    return {
+      title: decodeHtml(title.trim()),
+      url: `https://www.tesla.com${href}`,
+      dateLabel: extractDateLabel(match[0]),
+      source: "Tesla Official",
+      company: "Tesla",
+    };
+  })).slice(0, 6);
+}
+
+async function fetchTeslaAutoNews() {
+  const response = await fetch("https://electrek.co/guides/tesla/feed/");
+  if (!response.ok) return [];
+  const xml = await response.text();
+  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((match) => match[1]);
+  return normalizeItems(items.map((item) => ({
+    title: decodeHtml(readXmlTag(item, "title")),
+    url: readXmlTag(item, "link"),
+    dateLabel: readXmlTag(item, "pubDate"),
+    source: "Electrek Tesla",
+    company: "Tesla",
+  }))).slice(0, 6);
+}
+
 async function fetchTechCrunchAiNews() {
   const response = await fetch("https://techcrunch.com/category/artificial-intelligence/feed/");
   if (!response.ok) return [];
@@ -277,7 +317,7 @@ function pickCompanyItems(groups, excludedUrls) {
 function classifyItem(title) {
   const text = String(title).toLowerCase();
   if (/(model|reasoning|benchmark|training|agent|multimodal|frontier|gpt|claude|gemini|llama|grok)/i.test(text)) return "model_updates";
-  if (/(launch|release|rollout|introduc|available|app|api|product|tool|platform|feature)/i.test(text)) return "product_launches";
+  if (/(launch|release|rollout|introduc|available|app|api|product|tool|platform|feature|model y|model 3|cybertruck|fsd|autopilot|software update|refresh|delivery|review)/i.test(text)) return "product_launches";
   if (/(funding|raise|raised|valuation|revenue|partnership|acqui|investment|financing|enterprise)/i.test(text)) return "funding_business";
   if (/(policy|regulat|government|law|safety|security|copyright|compliance|ethics|privacy)/i.test(text)) return "policy_safety";
   return "product_launches";
@@ -290,6 +330,7 @@ function inferCompany(title) {
   if (text.includes("deepmind") || text.includes("gemini") || text.includes("google")) return "Google DeepMind";
   if (text.includes("meta") || text.includes("llama")) return "Meta";
   if (text.includes("xai") || text.includes("grok")) return "xAI";
+  if (text.includes("tesla") || text.includes("cybertruck") || text.includes("model y") || text.includes("model 3") || text.includes("autopilot") || text.includes("fsd")) return "Tesla";
   return "Industry";
 }
 
