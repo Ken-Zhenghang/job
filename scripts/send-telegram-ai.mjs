@@ -1,5 +1,12 @@
 import process from "node:process";
 
+const CATEGORY_LABELS = {
+  model_updates: "模型进展",
+  product_launches: "产品发布",
+  funding_business: "融资/商业",
+  policy_safety: "政策/安全",
+};
+
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -365,10 +372,3 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
-
-const CATEGORY_LABELS = {
-  model_updates: "模型进展",
-  product_launches: "产品发布",
-  funding_business: "融资/商业",
-  policy_safety: "政策/安全",
-};
