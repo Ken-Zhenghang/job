@@ -7,6 +7,19 @@ const CATEGORY_LABELS = {
   policy_safety: "政策/安全",
 };
 
+const SOURCE_PRIORITY = {
+  "OpenAI News": 100,
+  "Anthropic News": 95,
+  "Google DeepMind Blog": 92,
+  "Meta AI Blog": 90,
+  "xAI News": 88,
+  "Tesla Official": 86,
+  "Electrek Tesla": 70,
+  "TechCrunch AI": 65,
+};
+
+const FRESHNESS_DAYS = 21;
+
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -58,7 +71,7 @@ async function buildAiDigest() {
     ...teslaOfficialNews,
     ...teslaAutoNews,
     ...techCrunchAiNews,
-  ]).slice(0, 24);
+  ]).filter(isFreshItem).slice(0, 24);
 
   const top3 = buildTopStories(allItems);
   const topUrls = new Set(top3.map((item) => item.url));
@@ -70,7 +83,10 @@ async function buildAiDigest() {
     ["xAI", xaiNews],
     ["Tesla", [...teslaOfficialNews, ...teslaAutoNews]],
   ], topUrls);
-  const industry = techCrunchAiNews.filter((item) => !topUrls.has(item.url)).slice(0, 2);
+  const companyUrls = new Set(companyItems.map((item) => item.url));
+  const industry = allItems
+    .filter((item) => item.company === "Industry" && !topUrls.has(item.url) && !companyUrls.has(item.url))
+    .slice(0, 2);
 
   const lines = [
     "<b>AI Morning Brief</b>",
@@ -85,7 +101,7 @@ async function buildAiDigest() {
   } else {
     top3.forEach((item, index) => {
       lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(trimText(item.title, 88))}</a>`);
-      lines.push(`   ${escapeHtml(buildCommentary(item))} · ${escapeHtml(item.source)}`);
+      lines.push(`   ${escapeHtml(buildCommentary(item))} · ${escapeHtml(item.source)} · ${escapeHtml(item.dateLabel)}`);
     });
   }
 
@@ -100,7 +116,7 @@ async function buildAiDigest() {
   } else {
     industry.forEach((item, index) => {
       lines.push(`${index + 1}. ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(trimText(item.title, 80))}</a>`);
-      lines.push(`   ${escapeHtml(buildCommentary(item))} · ${escapeHtml(item.source)}`);
+      lines.push(`   ${escapeHtml(buildCommentary(item))} · ${escapeHtml(item.source)} · ${escapeHtml(item.dateLabel)}`);
     });
   }
 
@@ -115,15 +131,21 @@ function appendCompanyDigest(lines, items) {
 
   items.forEach((item) => {
     lines.push(`• ${renderSourceTag(item.company)} ${renderCategoryTag(item.category)} <a href="${escapeHtmlAttr(item.url)}">${escapeHtml(trimText(item.title, 76))}</a>`);
-    lines.push(`  ${escapeHtml(buildCommentary(item))}`);
+    lines.push(`  ${escapeHtml(buildCommentary(item))} · ${escapeHtml(item.source)} · ${escapeHtml(item.dateLabel)}`);
   });
 }
 
 function buildTopStories(items) {
+  const seenCompanies = new Set();
   return items
     .map((item) => ({ item, score: scoreItem(item) }))
     .sort((left, right) => right.score - left.score)
     .map((entry) => entry.item)
+    .filter((item) => {
+      if (seenCompanies.has(item.company)) return false;
+      seenCompanies.add(item.company);
+      return true;
+    })
     .slice(0, 3);
 }
 
@@ -137,6 +159,8 @@ function scoreItem(item) {
   if (item.category === "product_launches") score += 20;
   if (item.category === "policy_safety") score += 10;
   if (item.source === "TechCrunch AI") score += 5;
+  score += sourcePriority(item.source);
+  score += recencyScore(item.publishedAt);
   return score;
 }
 
@@ -296,22 +320,25 @@ async function fetchTechCrunchAiNews() {
 function normalizeItems(items) {
   return items.filter((item) => item.title && item.url).map((item) => ({
     ...item,
+    url: canonicalizeUrl(item.url),
     category: classifyItem(item.title),
+    publishedAt: parseDate(item.dateLabel),
   }));
 }
 
 function dedupeAiItems(items) {
+  const sorted = [...items].sort(compareItems);
   return dedupeBy(
-    dedupeBy(items, (item) => normalizeTitle(item.title)),
+    dedupeBy(sorted, (item) => normalizeTitle(item.title)),
     (item) => item.url,
   );
 }
 
 function pickCompanyItems(groups, excludedUrls) {
   return groups
-    .map(([company, items]) => items.find((item) => item.company === company && !excludedUrls.has(item.url)))
+    .map(([company, items]) => dedupeAiItems(items).filter(isFreshItem).find((item) => item.company === company && !excludedUrls.has(item.url)))
     .filter(Boolean)
-    .slice(0, 5);
+    .slice(0, 6);
 }
 
 function classifyItem(title) {
@@ -360,6 +387,48 @@ function dedupeBy(items, keyFn) {
     seen.add(key);
     return true;
   });
+}
+
+function compareItems(left, right) {
+  const rightScore = sourcePriority(right.source) + recencyScore(right.publishedAt);
+  const leftScore = sourcePriority(left.source) + recencyScore(left.publishedAt);
+  return rightScore - leftScore;
+}
+
+function sourcePriority(source) {
+  return SOURCE_PRIORITY[source] ?? 10;
+}
+
+function recencyScore(value) {
+  if (!value) return 0;
+  const days = Math.max(0, (Date.now() - value.getTime()) / 86400000);
+  return Math.max(0, 30 - Math.floor(days));
+}
+
+function isFreshItem(item) {
+  if (!item.publishedAt) return true;
+  const age = (Date.now() - item.publishedAt.getTime()) / 86400000;
+  return age <= FRESHNESS_DAYS;
+}
+
+function parseDate(value) {
+  const parsed = Date.parse(String(value));
+  return Number.isNaN(parsed) ? null : new Date(parsed);
+}
+
+function canonicalizeUrl(value) {
+  try {
+    const url = new URL(String(value));
+    url.hash = "";
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "ref", "fbclid", "gclid"].forEach((key) => {
+      url.searchParams.delete(key);
+    });
+    const normalizedPath = url.pathname.replace(/\/+$/, "") || "/";
+    url.pathname = normalizedPath;
+    return url.toString();
+  } catch {
+    return String(value);
+  }
 }
 
 function decodeHtml(value) {
