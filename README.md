@@ -18,6 +18,7 @@
 - 按关键词、城市、工作方式、发布时间筛选
 - 记录你已看过的岗位
 - 有新增岗位时触发浏览器通知
+- 网站内置 LinkedIn、Indeed、Glassdoor 的补充搜索入口
 - 通过 `scripts/update-jobs.mjs` 从多个公开职位源抓取最新数据
 - 通过 `scripts/send-telegram.mjs` 把每日岗位摘要发到 Telegram
 - 通过 `scripts/send-email.mjs` 把每日岗位摘要发到邮箱
@@ -75,6 +76,7 @@ node ./scripts/update-jobs.mjs
 - 主源：公司官网所使用的 Greenhouse、Lever、Ashby 职位板 API
 - 补充发现源：Indeed、LinkedIn、Glassdoor
 - 筛选：优先保留 Data Analyst、Senior Data Analyst、Product Analyst、Business Analyst、Marketing Analyst、Analytics Engineer 等贴近数据分析的职位
+- 推送时间：每天早上 9 点，按 `America/Chicago` 时区判断
 
 建议把采集命令放进：
 
@@ -150,7 +152,7 @@ SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weix
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 
-然后每日工作流会自动把岗位摘要发到你的 Telegram。
+然后每日工作流会自动在每天早上 9 点把岗位摘要发到你的 Telegram。
 
 ## 固定网站
 

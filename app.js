@@ -2,6 +2,44 @@ const DEFAULT_CITIES = ["Los Angeles", "San Jose", "San Francisco"];
 const JOBS_URL = "./data/jobs.json";
 const FALLBACK_JOBS_URL = "./data/jobs.sample.json";
 const STORAGE_KEY = "job-radar-seen-ids";
+const SEARCH_LINKS = [
+  {
+    name: "LinkedIn · San Francisco",
+    url: "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=San%20Francisco%2C%20California%2C%20United%20States",
+  },
+  {
+    name: "LinkedIn · San Jose",
+    url: "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=San%20Jose%2C%20California%2C%20United%20States",
+  },
+  {
+    name: "LinkedIn · Los Angeles",
+    url: "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=Los%20Angeles%2C%20California%2C%20United%20States",
+  },
+  {
+    name: "Indeed · San Francisco",
+    url: "https://www.indeed.com/jobs?q=data+analyst&l=San+Francisco%2C+CA",
+  },
+  {
+    name: "Indeed · San Jose",
+    url: "https://www.indeed.com/jobs?q=data+analyst&l=San+Jose%2C+CA",
+  },
+  {
+    name: "Indeed · Los Angeles",
+    url: "https://www.indeed.com/jobs?q=data+analyst&l=Los+Angeles%2C+CA",
+  },
+  {
+    name: "Glassdoor · San Francisco",
+    url: "https://www.glassdoor.com/Job/san-francisco-data-analyst-jobs-SRCH_IL.0,13_IC1147401_KO14,26.htm",
+  },
+  {
+    name: "Glassdoor · San Jose",
+    url: "https://www.glassdoor.com/Job/san-jose-data-analyst-jobs-SRCH_IL.0,8_IC1147436_KO9,21.htm",
+  },
+  {
+    name: "Glassdoor · Los Angeles",
+    url: "https://www.glassdoor.com/Job/los-angeles-data-analyst-jobs-SRCH_IL.0,11_IC1146821_KO12,24.htm",
+  },
+];
 
 const elements = {
   keywordInput: document.querySelector("#keywordInput"),
@@ -16,6 +54,7 @@ const elements = {
   lastUpdated: document.querySelector("#lastUpdated"),
   statusText: document.querySelector("#statusText"),
   jobCardTemplate: document.querySelector("#jobCardTemplate"),
+  searchLinksGrid: document.querySelector("#searchLinksGrid"),
 };
 
 let jobs = [];
@@ -27,6 +66,7 @@ bootstrap().catch((error) => {
 
 async function bootstrap() {
   await loadJobs();
+  renderSearchLinks();
   wireEvents();
   render();
 }
@@ -114,6 +154,31 @@ function render() {
     });
 
     elements.jobsGrid.append(fragment);
+  });
+}
+
+function renderSearchLinks() {
+  elements.searchLinksGrid.innerHTML = "";
+
+  SEARCH_LINKS.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "source-card";
+
+    const title = document.createElement("h3");
+    title.textContent = item.name;
+
+    const body = document.createElement("p");
+    body.textContent = "打开这个搜索页，直接看该站点最新的数据分析岗位。";
+
+    const link = document.createElement("a");
+    link.className = "job-link";
+    link.href = item.url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = "打开搜索";
+
+    card.append(title, body, link);
+    elements.searchLinksGrid.append(card);
   });
 }
 

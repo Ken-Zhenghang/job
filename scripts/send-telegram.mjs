@@ -15,6 +15,11 @@ const jobsFile = path.join(process.cwd(), "data", "jobs.json");
 const raw = await readFile(jobsFile, "utf8");
 const payload = JSON.parse(raw);
 const jobs = Array.isArray(payload.jobs) ? payload.jobs.slice(0, 8) : [];
+const searchLinks = [
+  "LinkedIn SF: https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=San%20Francisco%2C%20California%2C%20United%20States",
+  "Indeed SF: https://www.indeed.com/jobs?q=data+analyst&l=San+Francisco%2C+CA",
+  "Glassdoor SF: https://www.glassdoor.com/Job/san-francisco-data-analyst-jobs-SRCH_IL.0,13_IC1147401_KO14,26.htm",
+];
 
 const lines = [
   "美国数据分析岗位日报",
@@ -32,6 +37,10 @@ for (const job of jobs) {
 if (siteUrl) {
   lines.push(`完整网站: ${siteUrl}`);
 }
+
+lines.push("");
+lines.push("补充搜索:");
+lines.push(...searchLinks);
 
 const text = lines.join("\n").slice(0, 3900);
 const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {

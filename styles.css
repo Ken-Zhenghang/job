@@ -216,6 +216,11 @@ select {
   color: var(--muted);
 }
 
+.source-card a {
+  display: inline-block;
+  margin-top: 14px;
+}
+
 .job-card {
   display: grid;
   gap: 14px;
