@@ -11,10 +11,24 @@ const TARGET_CITIES = [
 const TITLE_PATTERNS = [
   /data analyst/i,
   /senior data analyst/i,
+  /staff data analyst/i,
+  /lead data analyst/i,
   /product analyst/i,
   /business analyst/i,
+  /marketing analyst/i,
   /marketing inference/i,
-  /analytics/i,
+  /people analytics analyst/i,
+  /analytics engineer/i,
+];
+
+const EXCLUDED_TITLE_PATTERNS = [
+  /software engineer/i,
+  /data engineer/i,
+  /machine learning/i,
+  /research/i,
+  /sourcing/i,
+  /manager/i,
+  /scientist/i,
 ];
 
 const GREENHOUSE_SOURCES = [
@@ -27,11 +41,7 @@ const GREENHOUSE_SOURCES = [
   { boardToken: "crunchyroll", company: "Crunchyroll" },
 ];
 
-const LEVER_SOURCES = [
-  { site: "airtable", company: "Airtable" },
-  { site: "scaleai", company: "Scale AI" },
-  { site: "robinhood", company: "Robinhood" },
-];
+const LEVER_SOURCES = [];
 
 const ASHBY_SOURCES = [
   { board: "openai", company: "OpenAI" },
@@ -188,12 +198,14 @@ function isRelevantJob(job) {
     return false;
   }
 
+  const title = job.title.toLowerCase();
   const haystack = `${job.title} ${job.snippet}`.toLowerCase();
-  const matchesTitle = TITLE_PATTERNS.some((pattern) => pattern.test(haystack));
+  const matchesTitle = TITLE_PATTERNS.some((pattern) => pattern.test(title));
+  const excludedTitle = EXCLUDED_TITLE_PATTERNS.some((pattern) => pattern.test(title));
   const location = `${job.city} ${job.snippet}`.toLowerCase();
-  const matchesLocation = TARGET_CITIES.some((city) => location.includes(city)) || job.workMode === "Remote";
+  const matchesLocation = TARGET_CITIES.some((city) => location.includes(city));
 
-  return matchesTitle && matchesLocation;
+  return matchesTitle && !excludedTitle && matchesLocation && haystack.includes("anal");
 }
 
 function pickCity(locationText, fallbackText = "") {
@@ -287,8 +299,9 @@ function dedupeJobs(items) {
       continue;
     }
 
-    if (!seen.has(item.url)) {
-      seen.set(item.url, item);
+    const key = `${item.company}::${item.title}::${item.city}`;
+    if (!seen.has(key)) {
+      seen.set(key, item);
     }
   }
 

@@ -283,34 +283,4 @@ select {
 .job-link {
   color: var(--accent-deep);
   text-decoration: none;
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
-  font-weight: 700;
-}
-
-.empty-state {
-  padding: 28px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--muted);
-  text-align: center;
-}
-
-@media (max-width: 900px) {
-  .filters,
-  .summary-grid,
-  .jobs-grid,
-  .source-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hero {
-    padding: 28px;
-  }
-
-  .section-header,
-  .job-card-top,
-  .job-footer {
-    align-items: start;
-    flex-direction: column;
-  }
-}
+  font-family: "Avenir Next", "Segoe UI",

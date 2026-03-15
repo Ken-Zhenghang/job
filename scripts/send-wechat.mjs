@@ -6,8 +6,8 @@ const webhookUrl = process.env.WECOM_WEBHOOK_URL;
 const siteUrl = process.env.SITE_URL;
 
 if (!webhookUrl) {
-  console.error("Missing WECOM_WEBHOOK_URL environment variable.");
-  process.exit(1);
+  console.log("Skipping WeCom push because WECOM_WEBHOOK_URL is not set.");
+  process.exit(0);
 }
 
 const jobsFile = path.join(process.cwd(), "data", "jobs.json");

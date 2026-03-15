@@ -72,6 +72,7 @@ node ./scripts/update-jobs.mjs
 
 - 主源：公司官网所使用的 Greenhouse、Lever、Ashby 职位板 API
 - 补充发现源：Indeed、LinkedIn、Glassdoor
+- 筛选：优先保留 Data Analyst、Senior Data Analyst、Product Analyst、Business Analyst、Marketing Analyst、Analytics Engineer 等贴近数据分析的职位
 
 建议把采集命令放进：
 
@@ -85,6 +86,8 @@ node ./scripts/update-jobs.mjs
 
 - `WECOM_WEBHOOK_URL`
 - `SITE_URL`
+
+如果暂时没填 `WECOM_WEBHOOK_URL`，工作流会跳过企业微信发送，不会因为缺少 webhook 而失败。
 
 ## 说明
 
