@@ -51,4 +51,4 @@ if (!response.ok) {
   process.exit(1);
 }
 
-console.log("WeChat payload sent.");
+console.log("WeChat payload s

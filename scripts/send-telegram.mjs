@@ -32,7 +32,7 @@ const recentWeek = jobs.filter((job) => daysSince(job.postedAt) > 1 && daysSince
 const olderBacklog = jobs.filter((job) => daysSince(job.postedAt) > 7).slice(0, 4);
 
 const lines = [
-  "美国数据分析岗位日报",
+  "Jobs Morning Brief",
   `更新时间: ${formatDate(payload.lastUpdated ?? new Date().toISOString())}`,
   `今日可重点看: ${recentToday.length} 个`,
   `近 7 天内: ${recentWeek.length} 个`,

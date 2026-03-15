@@ -22,6 +22,7 @@
 - 通过 `scripts/update-jobs.mjs` 从多个公开职位源抓取最新数据
 - 通过 `scripts/send-telegram.mjs` 把每日岗位摘要发到 Telegram
 - 通过 `scripts/send-telegram-nfl.mjs` 把 NFL 每日简报发到 Telegram
+- 通过 `scripts/send-telegram-ai.mjs` 把 AI 每日简报发到 Telegram
 - 通过 `scripts/send-email.mjs` 把每日岗位摘要发到邮箱
 - 通过 `scripts/send-wechat.mjs` 把每日岗位摘要推送到企业微信机器人
 
@@ -164,6 +165,16 @@ SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weix
 - 赛季期：自动切换成比赛数据、比分和重磅新闻
 
 默认按 `America/Chicago` 时区在每天早上 `9:10` 发送，工作流文件在 `.github/workflows/daily-nfl.yml`。
+
+## AI 每日简报
+
+仓库里还加了一个单独的 AI Telegram 工作流：
+
+- 优先抓 OpenAI 官方动态
+- 同时补充 Anthropic 与 TechCrunch AI
+- 用更稳定的公开新闻页和 RSS 替代 X / Facebook 直抓
+
+默认按 `America/Chicago` 时区在每天早上 `9:20` 发送，工作流文件在 `.github/workflows/daily-ai.yml`。
 
 ## 固定网站
 
