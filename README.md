@@ -171,7 +171,9 @@ SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weix
 仓库里还加了一个单独的 AI Telegram 工作流：
 
 - 优先抓 OpenAI 官方动态
-- 同时补充 Anthropic 与 TechCrunch AI
+- 同时补充 Anthropic、Google DeepMind、Meta、xAI 与 TechCrunch AI
+- 按 OpenAI / Anthropic / Google DeepMind / Meta / xAI 分栏
+- 额外输出模型进展、产品发布、融资/商业、政策/安全四类摘要
 - 用更稳定的公开新闻页和 RSS 替代 X / Facebook 直抓
 
 默认按 `America/Chicago` 时区在每天早上 `9:20` 发送，工作流文件在 `.github/workflows/daily-ai.yml`。
