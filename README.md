@@ -19,6 +19,7 @@
 - 记录你已看过的岗位
 - 有新增岗位时触发浏览器通知
 - 通过 `scripts/update-jobs.mjs` 从多个公开职位源抓取最新数据
+- 通过 `scripts/send-telegram.mjs` 把每日岗位摘要发到 Telegram
 - 通过 `scripts/send-email.mjs` 把每日岗位摘要发到邮箱
 - 通过 `scripts/send-wechat.mjs` 把每日岗位摘要推送到企业微信机器人
 
@@ -85,6 +86,8 @@ node ./scripts/update-jobs.mjs
 
 如果你要用 GitHub Actions 自动跑，仓库里已经有定时工作流模板，后续只需要在仓库 Secrets 中填入：
 
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USER`
@@ -95,6 +98,8 @@ node ./scripts/update-jobs.mjs
 - `SITE_URL`
 
 如果暂时没填邮件或企业微信配置，工作流会自动跳过对应发送步骤，不会因此失败。
+
+如果你配置了 Telegram，但没配置邮件或企业微信，也完全没问题，Telegram 可以单独作为唯一通知通道。
 
 ## 说明
 
@@ -137,6 +142,15 @@ SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weix
 - `MAIL_TO=接收日报的邮箱`
 
 然后每日工作流会自动发送岗位摘要邮件。
+
+## Telegram 推送
+
+如果你想用 Telegram，建议优先走这个方案，最稳也最省事。你只需要在 GitHub Secrets 里配置：
+
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+
+然后每日工作流会自动把岗位摘要发到你的 Telegram。
 
 ## 固定网站
 
