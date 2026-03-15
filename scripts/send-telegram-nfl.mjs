@@ -41,25 +41,35 @@ async function buildOffseasonDigest() {
     fetchNflNews(),
   ]);
 
+  const trades = transactions.filter((item) => /(traded|acquired)/i.test(item.text));
+  const injuries = transactions.filter((item) => /(injured reserve|reserve\/injured|physically unable|non-football injury|injury|concussion)/i.test(item.text));
+  const cuts = transactions.filter((item) => /(released|waived|terminated|cut)/i.test(item.text));
+  const signings = transactions.filter((item) => !trades.includes(item) && !injuries.includes(item) && !cuts.includes(item));
+
   const lines = [
     "<b>NFL 每日简报</b>",
     "<i>休赛期模式: 交易 / 签约 / 重磅新闻</i>",
     `更新时间: <code>${formatDate(new Date().toISOString())}</code>`,
     "",
-    "<b>一、今日交易 / 签约</b>",
+    "<b>一、交易</b>",
   ];
 
-  if (transactions.length === 0) {
-    lines.push("• 暂无抓到新的交易或签约摘要");
-  } else {
-    transactions.slice(0, 8).forEach((item, index) => {
-      lines.push(`${index + 1}. <b>${escapeHtml(item.team)}</b>`);
-      lines.push(`   ${escapeHtml(item.text)}`);
-    });
-  }
+  appendTransactionSection(lines, trades, "暂无抓到新的交易摘要");
 
   lines.push("");
-  lines.push("<b>二、重磅新闻</b>");
+  lines.push("<b>二、伤病</b>");
+  appendTransactionSection(lines, injuries, "暂无抓到新的伤病动态");
+
+  lines.push("");
+  lines.push("<b>三、裁员 / Waived / Released</b>");
+  appendTransactionSection(lines, cuts, "暂无抓到新的裁员或放弃球员动态");
+
+  lines.push("");
+  lines.push("<b>四、签约 / 续约 / 其他动态</b>");
+  appendTransactionSection(lines, signings, "暂无抓到新的签约或续约动态");
+
+  lines.push("");
+  lines.push("<b>五、重磅新闻</b>");
 
   if (news.length === 0) {
     lines.push("• 暂无抓到新的头条新闻");
@@ -259,6 +269,18 @@ function dedupeBy(items, keyFn) {
     }
     seen.add(key);
     return true;
+  });
+}
+
+function appendTransactionSection(lines, items, emptyText) {
+  if (items.length === 0) {
+    lines.push(`• ${emptyText}`);
+    return;
+  }
+
+  items.slice(0, 6).forEach((item, index) => {
+    lines.push(`${index + 1}. <b>${escapeHtml(item.team)}</b>`);
+    lines.push(`   ${escapeHtml(item.text)}`);
   });
 }
 
