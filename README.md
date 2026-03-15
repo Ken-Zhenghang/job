@@ -21,6 +21,7 @@
 - 网站内置 LinkedIn、Indeed、Glassdoor 的补充搜索入口
 - 通过 `scripts/update-jobs.mjs` 从多个公开职位源抓取最新数据
 - 通过 `scripts/send-telegram.mjs` 把每日岗位摘要发到 Telegram
+- 通过 `scripts/send-telegram-nfl.mjs` 把 NFL 每日简报发到 Telegram
 - 通过 `scripts/send-email.mjs` 把每日岗位摘要发到邮箱
 - 通过 `scripts/send-wechat.mjs` 把每日岗位摘要推送到企业微信机器人
 
@@ -154,6 +155,15 @@ SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weix
 - `TELEGRAM_CHAT_ID`
 
 然后每日工作流会自动在每天早上 9 点把岗位摘要发到你的 Telegram。
+
+## NFL 每日简报
+
+仓库里还加了一个单独的 NFL Telegram 工作流：
+
+- 休赛期：推送交易、签约、裁员和重磅新闻
+- 赛季期：自动切换成比赛数据、比分和重磅新闻
+
+默认按 `America/Chicago` 时区在每天早上 `9:10` 发送，工作流文件在 `.github/workflows/daily-nfl.yml`。
 
 ## 固定网站
 

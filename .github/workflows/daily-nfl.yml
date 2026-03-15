@@ -1,0 +1,32 @@
+name: Daily NFL
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  send-nfl-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check Chicago run window
+        id: gate
+        env:
+          TARGET_HOUR: 9
+          TARGET_MINUTE: 10
+        run: node ./scripts/should-run-daily.mjs
+
+      - name: Send NFL Telegram summary
+        if: steps.gate.outputs.should_run == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node ./scripts/send-telegram-nfl.mjs
