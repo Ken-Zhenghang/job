@@ -47,10 +47,3 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SITE_URL: ${{ secrets.SITE_URL }}
         run: node ./scripts/send-telegram.mjs
-
-      - name: Send WeCom summary
-        if: steps.gate.outputs.should_run == 'true'
-        env:
-          WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL }}
-          SITE_URL: ${{ secrets.SITE_URL }}
-        run: node ./scripts/send-wechat.mjs
