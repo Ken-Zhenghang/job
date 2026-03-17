@@ -2,7 +2,7 @@ name: Daily Jobs
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
         env:
           TARGET_HOUR: 9
           TARGET_MINUTE: 0
-          BUFFER_MINUTES: 20
+          BUFFER_MINUTES: 30
         run: node ./scripts/should-run-daily.mjs
 
       - name: Update jobs feed

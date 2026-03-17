@@ -20,7 +20,9 @@ const parts = formatter.formatToParts(new Date());
 const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
 const hour = Number(values.hour);
 const minute = Number(values.minute);
-const isWithinWindow = hour === targetHour && minute >= targetMinute && minute < targetMinute + bufferMinutes;
+const nowMinutes = hour * 60 + minute;
+const targetMinutes = targetHour * 60 + targetMinute;
+const isWithinWindow = nowMinutes >= targetMinutes && nowMinutes < targetMinutes + bufferMinutes;
 const shouldRun = eventName === "workflow_dispatch" || isWithinWindow;
 const localTime = `${values.year}-${values.month}-${values.day} ${values.hour}:${values.minute} America/Chicago`;
 
