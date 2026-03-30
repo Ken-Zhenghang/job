@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-03-27T14:09:53.216Z",
+  "lastUpdated": "2026-03-30T14:00:31.508Z",
   "jobs": [
     {
       "id": "ashby-openai-c3f437e7-034b-4ea0-a29e-c62eb23ca24f",
@@ -9,7 +9,7 @@
       "state": "CA",
       "workMode": "Hybrid",
       "salary": "薪资未公开",
-      "postedAt": "2026-03-27T14:09:50.592Z",
+      "postedAt": "2026-03-30T14:00:31.429Z",
       "source": "Ashby:openai",
       "url": "https://jobs.ashbyhq.com/openai/c3f437e7-034b-4ea0-a29e-c62eb23ca24f",
       "snippet": "About the Role As an early member of our Data team within the Go-To-Market (GTM) organization, you will play a pivotal role in building a data-centric culture, enhancing decision-m"
@@ -22,7 +22,7 @@
       "state": "CA",
       "workMode": "Hybrid",
       "salary": "薪资未公开",
-      "postedAt": "2026-03-27T14:09:50.588Z",
+      "postedAt": "2026-03-30T14:00:31.422Z",
       "source": "Ashby:openai",
       "url": "https://jobs.ashbyhq.com/openai/7cd50a19-65f2-4a52-89a2-512130e58c5c",
       "snippet": "About the Team The Finance Data team is embedded within the CFO Org and is responsible for building internal data products that scale analytics across business teams and drive effi"
@@ -35,10 +35,49 @@
       "state": "CA",
       "workMode": "Remote",
       "salary": "薪资未公开",
-      "postedAt": "2026-03-27T14:09:50.449Z",
+      "postedAt": "2026-03-30T14:00:31.310Z",
       "source": "Ashby:harvey",
       "url": "https://jobs.ashbyhq.com/harvey/26954747-1019-405f-a6b7-ff454517924f",
       "snippet": "Why Harvey At Harvey, we’re transforming how legal and professional services operate — not incrementally, but end-to-end. By combining frontier agentic AI, an enterprise-grade plat"
+    },
+    {
+      "id": "gh-crunchyroll-7670371",
+      "title": "Senior Data Analyst, Global Business Analytics",
+      "company": "Crunchyroll",
+      "city": "Los Angeles",
+      "state": "CA",
+      "workMode": "Hybrid",
+      "salary": "薪资未公开",
+      "postedAt": "2026-03-27T12:31:04-04:00",
+      "source": "Greenhouse:crunchyroll",
+      "url": "https://boards.greenhouse.io/crunchyroll/jobs/7670371?gh_jid=7670371",
+      "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2 data-pm-slice=&quot;1 1 []&quot;&gt;About Crunchyroll&lt;/h2&gt; &lt;p&gt;Founded by fans, Crunchyroll delivers the art and cultur"
+    },
+    {
+      "id": "gh-crunchyroll-7609325",
+      "title": "Staff Analytics Engineer",
+      "company": "Crunchyroll",
+      "city": "San Francisco",
+      "state": "CA",
+      "workMode": "Hybrid",
+      "salary": "薪资未公开",
+      "postedAt": "2026-03-27T12:31:04-04:00",
+      "source": "Greenhouse:crunchyroll",
+      "url": "https://boards.greenhouse.io/crunchyroll/jobs/7609325?gh_jid=7609325",
+      "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2 data-pm-slice=&quot;1 1 []&quot;&gt;About Crunchyroll&lt;/h2&gt; &lt;p&gt;Founded by fans, Crunchyroll delivers the art and cultur"
+    },
+    {
+      "id": "gh-crunchyroll-7530973",
+      "title": "Staff Data Analyst",
+      "company": "Crunchyroll",
+      "city": "Los Angeles",
+      "state": "CA",
+      "workMode": "Hybrid",
+      "salary": "薪资未公开",
+      "postedAt": "2026-03-27T12:31:04-04:00",
+      "source": "Greenhouse:crunchyroll",
+      "url": "https://boards.greenhouse.io/crunchyroll/jobs/7530973?gh_jid=7530973",
+      "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2 data-pm-slice=&quot;1 1 []&quot;&gt;About Crunchyroll&lt;/h2&gt; &lt;p&gt;Founded by fans, Crunchyroll delivers the art and cultur"
     },
     {
       "id": "gh-springhealth66-4667499005",
@@ -52,45 +91,6 @@
       "source": "Greenhouse:springhealth66",
       "url": "https://job-boards.greenhouse.io/springhealth66/jobs/4667499005",
       "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2&gt;&lt;strong&gt;Our mission: to eliminate every barrier to mental health.&lt;/strong&gt;&lt;strong&gt;&lt;br&gt;&lt;/strong&gt;&l"
-    },
-    {
-      "id": "gh-crunchyroll-7670371",
-      "title": "Senior Data Analyst, Global Business Analytics",
-      "company": "Crunchyroll",
-      "city": "Los Angeles",
-      "state": "CA",
-      "workMode": "Hybrid",
-      "salary": "薪资未公开",
-      "postedAt": "2026-03-25T14:42:03-04:00",
-      "source": "Greenhouse:crunchyroll",
-      "url": "https://boards.greenhouse.io/crunchyroll/jobs/7670371?gh_jid=7670371",
-      "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2 data-pm-slice=&quot;1 1 []&quot;&gt;About Crunchyroll&lt;/h2&gt; &lt;p&gt;Founded by fans, Crunchyroll delivers the art and cultur"
-    },
-    {
-      "id": "gh-crunchyroll-7609325",
-      "title": "Staff Analytics Engineer",
-      "company": "Crunchyroll",
-      "city": "San Francisco",
-      "state": "CA",
-      "workMode": "Hybrid",
-      "salary": "薪资未公开",
-      "postedAt": "2026-03-25T14:42:03-04:00",
-      "source": "Greenhouse:crunchyroll",
-      "url": "https://boards.greenhouse.io/crunchyroll/jobs/7609325?gh_jid=7609325",
-      "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2 data-pm-slice=&quot;1 1 []&quot;&gt;About Crunchyroll&lt;/h2&gt; &lt;p&gt;Founded by fans, Crunchyroll delivers the art and cultur"
-    },
-    {
-      "id": "gh-crunchyroll-7530973",
-      "title": "Staff Data Analyst",
-      "company": "Crunchyroll",
-      "city": "Los Angeles",
-      "state": "CA",
-      "workMode": "Hybrid",
-      "salary": "薪资未公开",
-      "postedAt": "2026-03-25T14:42:03-04:00",
-      "source": "Greenhouse:crunchyroll",
-      "url": "https://boards.greenhouse.io/crunchyroll/jobs/7530973?gh_jid=7530973",
-      "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2 data-pm-slice=&quot;1 1 []&quot;&gt;About Crunchyroll&lt;/h2&gt; &lt;p&gt;Founded by fans, Crunchyroll delivers the art and cultur"
     },
     {
       "id": "gh-chime-8327705002",
@@ -247,19 +247,6 @@
       "source": "Greenhouse:betterhelpcom",
       "url": "https://job-boards.greenhouse.io/betterhelpcom/jobs/4959413008",
       "snippet": "&lt;h2&gt;&lt;strong&gt;Who are we and why should you join us?&lt;/strong&gt;&lt;/h2&gt; &lt;p&gt;BetterHelp is on a mission to remove the traditional barriers to therapy and make "
-    },
-    {
-      "id": "gh-doximity-6738774",
-      "title": "Senior Data Analyst",
-      "company": "Doximity",
-      "city": "San Francisco",
-      "state": "CA",
-      "workMode": "Remote",
-      "salary": "薪资未公开",
-      "postedAt": "2026-02-26T13:42:43-05:00",
-      "source": "Greenhouse:doximity",
-      "url": "https://job-boards.greenhouse.io/doximity/jobs/6738774",
-      "snippet": "&lt;p&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;Doximity is transforming the healthcare industry. Join our mission to help every physician be more productive and provide b"
     }
   ]
 }
