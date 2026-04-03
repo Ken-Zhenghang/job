@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-01T14:15:27.113Z",
+  "lastUpdated": "2026-04-03T14:25:19.068Z",
   "jobs": [
     {
       "id": "ashby-openai-c3f437e7-034b-4ea0-a29e-c62eb23ca24f",
@@ -9,7 +9,7 @@
       "state": "CA",
       "workMode": "Hybrid",
       "salary": "薪资未公开",
-      "postedAt": "2026-04-01T14:15:26.508Z",
+      "postedAt": "2026-04-03T14:25:18.982Z",
       "source": "Ashby:openai",
       "url": "https://jobs.ashbyhq.com/openai/c3f437e7-034b-4ea0-a29e-c62eb23ca24f",
       "snippet": "About the Role As an early member of our Data team within the Go-To-Market (GTM) organization, you will play a pivotal role in building a data-centric culture, enhancing decision-m"
@@ -22,7 +22,7 @@
       "state": "CA",
       "workMode": "Hybrid",
       "salary": "薪资未公开",
-      "postedAt": "2026-04-01T14:15:26.503Z",
+      "postedAt": "2026-04-03T14:25:18.975Z",
       "source": "Ashby:openai",
       "url": "https://jobs.ashbyhq.com/openai/7cd50a19-65f2-4a52-89a2-512130e58c5c",
       "snippet": "About the Team The Finance Data team is embedded within the CFO Org and is responsible for building internal data products that scale analytics across business teams and drive effi"
@@ -35,7 +35,7 @@
       "state": "CA",
       "workMode": "Remote",
       "salary": "薪资未公开",
-      "postedAt": "2026-04-01T14:15:26.390Z",
+      "postedAt": "2026-04-03T14:25:07.514Z",
       "source": "Ashby:harvey",
       "url": "https://jobs.ashbyhq.com/harvey/26954747-1019-405f-a6b7-ff454517924f",
       "snippet": "Why Harvey At Harvey, we’re transforming how legal and professional services operate — not incrementally, but end-to-end. By combining frontier agentic AI, an enterprise-grade plat"
@@ -91,19 +91,6 @@
       "source": "Greenhouse:springhealth66",
       "url": "https://job-boards.greenhouse.io/springhealth66/jobs/4667499005",
       "snippet": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h2&gt;&lt;strong&gt;Our mission: to eliminate every barrier to mental health.&lt;/strong&gt;&lt;strong&gt;&lt;br&gt;&lt;/strong&gt;&l"
-    },
-    {
-      "id": "gh-chime-8327705002",
-      "title": "Senior Data Analyst, Credit Risk",
-      "company": "Chime",
-      "city": "San Francisco",
-      "state": "CA",
-      "workMode": "Remote",
-      "salary": "Salary",
-      "postedAt": "2026-03-23T03:02:44-04:00",
-      "source": "Greenhouse:chime",
-      "url": "https://boards.greenhouse.io/chime/jobs/8327705002?gh_jid=8327705002",
-      "snippet": "&lt;h3&gt;&lt;strong&gt;About the Role&lt;/strong&gt;&lt;/h3&gt; &lt;p&gt;We are hiring a Sr. Risk Analyst who is data-driven and has strong analytical &amp; technical skills. In t"
     },
     {
       "id": "gh-chime-8344063002",
@@ -233,19 +220,6 @@
       "postedAt": "2026-03-06T11:37:55-05:00",
       "source": "Greenhouse:betterhelpcom",
       "url": "https://job-boards.greenhouse.io/betterhelpcom/jobs/5134385008",
-      "snippet": "&lt;h2&gt;&lt;strong&gt;Who are we and why should you join us?&lt;/strong&gt;&lt;/h2&gt; &lt;p&gt;BetterHelp is on a mission to remove the traditional barriers to therapy and make "
-    },
-    {
-      "id": "gh-betterhelpcom-4959413008",
-      "title": "Business Intelligence and Analytics Engineer",
-      "company": "BetterHelp",
-      "city": "San Jose",
-      "state": "CA",
-      "workMode": "Remote",
-      "salary": "薪资未公开",
-      "postedAt": "2026-03-02T15:12:45-05:00",
-      "source": "Greenhouse:betterhelpcom",
-      "url": "https://job-boards.greenhouse.io/betterhelpcom/jobs/4959413008",
       "snippet": "&lt;h2&gt;&lt;strong&gt;Who are we and why should you join us?&lt;/strong&gt;&lt;/h2&gt; &lt;p&gt;BetterHelp is on a mission to remove the traditional barriers to therapy and make "
     }
   ]
