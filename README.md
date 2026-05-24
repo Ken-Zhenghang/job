@@ -1,197 +1,65 @@
-# 每日推送中心
+# 📊 Daily Push — Automated Job Tracker for Data Analysts
 
-一个轻量网页，用来追踪美国数据分析相关岗位，并承载 Telegram 每日推送：
+A lightweight web dashboard + multi-channel alert system for tracking Data Analyst / Business Analyst job postings in **Los Angeles, San Jose, and San Francisco**.
 
-- Los Angeles
-- San Jose
-- San Francisco
+**[Live Demo](https://ken-zhenghang.github.io/daily-push/)**
 
-当前计划对接的 GitHub 仓库：
+---
 
-- 用户名：`Ken-Zhenghang`
-- 当前仓库名：`daily-push`
-- 当前仓库地址：`https://github.com/Ken-Zhenghang/daily-push`
+## Features
 
-## 现在能做什么
+- 🔍 **Multi-Source Scraping** — Greenhouse, Lever, Ashby job boards + Indeed, LinkedIn, Glassdoor
+- 🏷️ **Smart Filtering** — Filter by keyword, city, work mode, and posting date
+- 📋 **View Tracking** — Mark jobs as viewed, never re-read the same listing
+- 🔔 **Browser Notifications** — Alerts on new listings
+- 📬 **Multi-Channel Delivery** — Daily summaries via Telegram, Email, and WeCom
+- ⏰ **Automated Scheduling** — GitHub Actions runs daily at 9 AM CT
 
-- 展示岗位列表
-- 按关键词、城市、工作方式、发布时间筛选
-- 记录你已看过的岗位
-- 有新增岗位时触发浏览器通知
-- 网站内置 LinkedIn、Indeed、Glassdoor 的补充搜索入口
-- 通过 `scripts/update-jobs.mjs` 从多个公开职位源抓取最新数据
-- 通过 `scripts/send-telegram.mjs` 把每日岗位摘要发到 Telegram
-- 通过 `scripts/send-telegram-nfl.mjs` 把 NFL 每日简报发到 Telegram
-- 通过 `scripts/send-telegram-ai.mjs` 把 AI 每日简报发到 Telegram
-- 通过 `scripts/send-email.mjs` 把每日岗位摘要发到邮箱
-- 通过 `scripts/send-wechat.mjs` 把每日岗位摘要推送到企业微信机器人
+---
 
-## 本地运行
+## Tech Stack
 
-直接在项目目录启动一个静态服务器：
+| Layer | Technology |
+|-------|------------|
+| Frontend | Vanilla JS, HTML/CSS |
+| Scraping | Node.js, Greenhouse/Lever/Ashby APIs |
+| Automation | GitHub Actions (cron) |
+| Notifications | Telegram Bot API, SMTP, WeCom Webhook |
+| Hosting | GitHub Pages |
+
+---
+
+## Quick Start
 
 ```bash
 python3 -m http.server 8000
+# Open http://localhost:8000
 ```
 
-然后打开：
+---
 
-```text
-http://localhost:8000
-```
+## Configuration
 
-## 数据格式
+Required GitHub Secrets:
 
-前端默认读取 `data/jobs.json`，格式如下：
+| Secret | Purpose |
+|--------|---------|
+| `TELEGRAM_BOT_TOKEN` | Telegram bot auth |
+| `TELEGRAM_CHAT_ID` | Target chat for alerts |
+| `SMTP_*` | Email delivery (optional) |
+| `WECOM_WEBHOOK_URL` | WeCom bot (optional) |
 
-```json
-{
-  "lastUpdated": "2026-03-15T08:30:00-05:00",
-  "jobs": [
-    {
-      "id": "sf-001",
-      "title": "Senior Data Analyst",
-      "company": "Stripe",
-      "city": "San Francisco",
-      "state": "CA",
-      "workMode": "Hybrid",
-      "salary": "$145,000 - $175,000",
-      "postedAt": "2026-03-15T06:15:00-05:00",
-      "source": "Company Careers",
-      "url": "https://example.com/jobs/sf-001",
-      "snippet": "Build KPI frameworks and support product decisions."
-    }
-  ]
-}
-```
+Missing a config? The workflow skips that channel gracefully.
 
-## 每日自动更新
+---
 
-仓库现在内置的是多源采集器，默认会抓取公开职位板：
+## Bonus Workflows
 
-```bash
-node ./scripts/update-jobs.mjs
-```
+- 🏈 `daily-nfl.yml` — NFL news & scores
+- 🤖 `daily-ai.yml` — AI industry roundup (OpenAI, Anthropic, DeepMind, Meta, xAI)
 
-当前策略：
+---
 
-- 主源：公司官网所使用的 Greenhouse、Lever、Ashby 职位板 API
-- 补充发现源：Indeed、LinkedIn、Glassdoor
-- 筛选：优先保留 Data Analyst、Senior Data Analyst、Product Analyst、Business Analyst、Marketing Analyst、Analytics Engineer 等贴近数据分析的职位
-- 推送时间：每天早上 9 点，按 `America/Chicago` 时区判断
-- Telegram 日报会按“今日 / 最近 7 天 / 较早但仍可投”分组，优先把新岗位放在最前面
+## Why This Project
 
-建议把采集命令放进：
-
-- `GitHub Actions`
-- `cron`
-- 或 Codex automation
-
-这样每天更新 `data/jobs.json` 后，网页刷新即可看到新岗位。
-
-如果你要用 GitHub Actions 自动跑，仓库里已经有定时工作流模板，后续只需要在仓库 Secrets 中填入：
-
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_USER`
-- `SMTP_PASS`
-- `MAIL_FROM`
-- `MAIL_TO`
-- `WECOM_WEBHOOK_URL`
-- `SITE_URL`
-
-如果暂时没填邮件或企业微信配置，工作流会自动跳过对应发送步骤，不会因此失败。
-
-如果你配置了 Telegram，但没配置邮件或企业微信，也完全没问题，Telegram 可以单独作为唯一通知通道。
-
-## 说明
-
-当前仓库内置的是我已手动核过的一批公开岗位链接，同时也加上了自动多源采集器。长期策略如下：
-
-- 主源：公司官网、Greenhouse、Lever、Ashby
-- 补充源：Indeed、LinkedIn、Glassdoor
-- 推送：Telegram
-
-原因是 Indeed、LinkedIn、Glassdoor 反爬更强、页面结构变化更频繁，不适合作为唯一主抓取源。
-
-## 微信推送
-
-当前仓库已经预留企业微信机器人推送脚本：
-
-```bash
-WECOM_WEBHOOK_URL="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx" node ./scripts/send-wechat.mjs
-```
-
-可选环境变量：
-
-```bash
-SITE_URL="https://your-fixed-site.example" WECOM_WEBHOOK_URL="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx" node ./scripts/send-wechat.mjs
-```
-
-说明：
-
-- 这是最容易稳定落地的“接微信”方案
-- 如果你要接个人微信，而不是企业微信/群机器人，通常需要服务号、企业微信，或者第三方桥接服务
-
-## 邮件推送
-
-如果你不想接企业微信，建议直接用邮箱。以 Outlook 为例，你只需要在 GitHub Secrets 里配置：
-
-- `SMTP_HOST=smtp-mail.outlook.com`
-- `SMTP_PORT=587`
-- `SMTP_USER=你的 Outlook 邮箱`
-- `SMTP_PASS=你的 Outlook 密码或应用专用密码`
-- `MAIL_FROM=你的 Outlook 邮箱`
-- `MAIL_TO=接收日报的邮箱`
-
-然后每日工作流会自动发送岗位摘要邮件。
-
-## Telegram 推送
-
-如果你想用 Telegram，建议优先走这个方案，最稳也最省事。你只需要在 GitHub Secrets 里配置：
-
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
-
-然后每日工作流会自动在每天早上 9 点把岗位摘要发到你的 Telegram。
-
-## NFL 每日简报
-
-仓库里还加了一个单独的 NFL Telegram 工作流：
-
-- 休赛期：推送交易、签约、裁员和重磅新闻
-- 赛季期：自动切换成比赛数据、比分和重磅新闻
-
-默认按 `America/Chicago` 时区在每天早上 `9:10` 发送，工作流文件在 `.github/workflows/daily-nfl.yml`。
-
-## AI 每日简报
-
-仓库里还加了一个单独的 AI Telegram 工作流：
-
-- 优先抓 OpenAI 官方动态
-- 同时补充 Anthropic、Google DeepMind、Meta、xAI 与 TechCrunch AI
-- 按 OpenAI / Anthropic / Google DeepMind / Meta / xAI 分栏
-- 额外输出模型进展、产品发布、融资/商业、政策/安全四类摘要
-- 用更稳定的公开新闻页和 RSS 替代 X / Facebook 直抓
-
-默认按 `America/Chicago` 时区在每天早上 `9:20` 发送，工作流文件在 `.github/workflows/daily-ai.yml`。
-
-## 固定网站
-
-如果走 GitHub Pages，固定网址会是：
-
-```text
-https://ken-zhenghang.github.io/daily-push/
-```
-
-部署工作流文件在 `.github/workflows/deploy-pages.yml`。
-
-页面标题我已经改成了“每日推送中心”。如果你把 GitHub 仓库真正改名为 `daily-push`，这里的地址也会对应生效。
-
-注意：
-
-- GitHub Pages 站点本身是公开可访问的
-- 如果你要“非公开但你自己能看”，建议后续改成 Netlify + 密码保护
-- 代码仍然可以放在 GitHub 私有仓库或公开仓库里
+Built to solve a real problem: manually checking 5+ job boards every morning for California DA roles was a time sink. This automates discovery and lets me focus on applying.
