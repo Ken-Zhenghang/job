@@ -1,6 +1,8 @@
 name: Daily Jobs
 
 on:
+  schedule:
+    - cron: '30 13,14,15 * * *'
   workflow_dispatch:
 
 jobs:
