@@ -3,77 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Push – Data Analyst Jobs</title>
+  <title>Daily Push – Data Jobs</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
+
     <header>
       <h1>Daily Push</h1>
-      <p class="subtitle">Data analyst jobs in California, updated daily</p>
+      <p class="subtitle">Data analyst jobs in CA</p>
       <div class="stats">
-        <span id="job-count">0</span> jobs • 
-        <span id="new-count">0</span> new • 
+        <span id="job-count">0</span> jobs
         <span id="favorite-count">0</span> saved
       </div>
     </header>
 
+    <nav class="tabs">
+      <button class="tab active" data-tab="all">All Jobs</button>
+      <button class="tab" data-tab="applied">My Applications <span id="applied-count" class="badge">0</span></button>
+    </nav>
+
     <div class="filters-bar">
-      <input type="text" id="keyword" placeholder="Search jobs..." class="search">
-      
-      <select id="company">
-        <option value="">All companies</option>
-      </select>
-      
-      <select id="city">
-        <option value="">All cities</option>
-      </select>
-      
-      <select id="work-mode">
-        <option value="">All work modes</option>
-        <option value="Remote">Remote</option>
-        <option value="Hybrid">Hybrid</option>
-        <option value="On-site">On-site</option>
-      </select>
-      
-      <select id="salary">
-        <option value="">Any salary</option>
-        <option value="80000">$80K+</option>
-        <option value="100000">$100K+</option>
-        <option value="120000">$120K+</option>
-      </select>
-      
-      <select id="sort">
-        <option value="posted-desc">Newest</option>
-        <option value="salary-desc">Salary high</option>
-        <option value="company-asc">Company A-Z</option>
-      </select>
-      
+      <input type="text" id="keyword" placeholder="Search..." class="search">
+      <select id="company"><option value="">Company</option></select>
+      <select id="city"><option value="">City</option></select>
+      <select id="work-mode"><option value="">Mode</option><option>Remote</option><option>Hybrid</option><option>On-site</option></select>
+      <select id="salary"><option value="">Salary</option><option value="80000">$80K+</option><option value="100000">$100K+</option><option value="120000">$120K+</option></select>
+      <select id="status-filter"><option value="">Status</option><option value="applied">Applied</option><option value="phone">Phone</option><option value="interview">Interview</option><option value="offer">Offer</option><option value="rejected">Rejected</option><option value="accepted">Accepted</option></select>
+      <select id="sort"><option value="posted-desc">Newest</option><option value="salary-desc">Salary ↓</option><option value="company-asc">Company A-Z</option></select>
       <button id="clear-filters">Clear</button>
     </div>
 
-    <div class="main">
-      <div id="jobs-container" class="jobs-list">
-        <div class="loading">Loading jobs...</div>
-      </div>
-      
-      <div id="no-results" class="no-results" style="display: none;">
-        <p>No jobs match your filters.</p>
-      </div>
+    <div id="jobs-container" class="table-wrap">
+      <div class="loading">Loading...</div>
     </div>
 
-    <footer>
-      <p>Updated <span id="last-updated">just now</span> • 
-        <span id="sources-count">0</span> sources • 
-        <span id="fetch-duration">0s</span> fetch
-      </p>
-      <p class="footer-note">
-        Jobs from Greenhouse, Lever, Ashby • 
-        <a href="https://github.com/Ken-Zhenghang/daily-push" target="_blank">GitHub</a>
-      </p>
-    </footer>
-  </div>
+    <div id="no-results" style="display:none"><p>No jobs match.</p></div>
 
+    <footer>
+      <p>Updated <span id="last-updated">—</span> · <span id="sources-count">0</span> sources · <span id="fetch-duration">0s</span></p>
+      <p class="note">Greenhouse · Lever · Ashby · Workable · <a href="https://github.com/Ken-Zhenghang/daily-push">GitHub</a></p>
+    </footer>
+
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
