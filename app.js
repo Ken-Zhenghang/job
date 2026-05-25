@@ -1,285 +1,460 @@
-const DEFAULT_CITIES = ["Los Angeles", "San Jose", "San Francisco"];
-const JOBS_URL = "./data/jobs.json";
-const FALLBACK_JOBS_URL = "./data/jobs.sample.json";
-const STORAGE_KEY = "job-radar-seen-ids";
-const SEARCH_LINKS = [
-  {
-    name: "LinkedIn · San Francisco",
-    url: "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=San%20Francisco%2C%20California%2C%20United%20States",
-  },
-  {
-    name: "LinkedIn · San Jose",
-    url: "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=San%20Jose%2C%20California%2C%20United%20States",
-  },
-  {
-    name: "LinkedIn · Los Angeles",
-    url: "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&location=Los%20Angeles%2C%20California%2C%20United%20States",
-  },
-  {
-    name: "Indeed · San Francisco",
-    url: "https://www.indeed.com/jobs?q=data+analyst&l=San+Francisco%2C+CA",
-  },
-  {
-    name: "Indeed · San Jose",
-    url: "https://www.indeed.com/jobs?q=data+analyst&l=San+Jose%2C+CA",
-  },
-  {
-    name: "Indeed · Los Angeles",
-    url: "https://www.indeed.com/jobs?q=data+analyst&l=Los+Angeles%2C+CA",
-  },
-  {
-    name: "Glassdoor · San Francisco",
-    url: "https://www.glassdoor.com/Job/san-francisco-data-analyst-jobs-SRCH_IL.0,13_IC1147401_KO14,26.htm",
-  },
-  {
-    name: "Glassdoor · San Jose",
-    url: "https://www.glassdoor.com/Job/san-jose-data-analyst-jobs-SRCH_IL.0,8_IC1147436_KO9,21.htm",
-  },
-  {
-    name: "Glassdoor · Los Angeles",
-    url: "https://www.glassdoor.com/Job/los-angeles-data-analyst-jobs-SRCH_IL.0,11_IC1146821_KO12,24.htm",
-  },
-];
+// Daily Push – Enhanced frontend
+class JobBoard {
+  constructor() {
+    this.jobs = [];
+    this.filteredJobs = [];
+    this.companies = new Set();
+    this.cities = new Set();
+    this.favorites = new Set();
+    this.viewMode = 'grid';
+    this.filters = {
+      keyword: '',
+      company: [],
+      city: '',
+      workMode: '',
+      salary: '',
+      posted: '30',
+      sort: 'posted-desc'
+    };
 
-const elements = {
-  keywordInput: document.querySelector("#keywordInput"),
-  cityFilter: document.querySelector("#cityFilter"),
-  workModeFilter: document.querySelector("#workModeFilter"),
-  ageFilter: document.querySelector("#ageFilter"),
-  refreshButton: document.querySelector("#refreshJobs"),
-  enableNotificationsButton: document.querySelector("#enableNotifications"),
-  jobsGrid: document.querySelector("#jobsGrid"),
-  jobCount: document.querySelector("#jobCount"),
-  newCount: document.querySelector("#newCount"),
-  lastUpdated: document.querySelector("#lastUpdated"),
-  statusText: document.querySelector("#statusText"),
-  jobCardTemplate: document.querySelector("#jobCardTemplate"),
-  searchLinksGrid: document.querySelector("#searchLinksGrid"),
-};
-
-let jobs = [];
-
-bootstrap().catch((error) => {
-  console.error(error);
-  elements.statusText.textContent = "加载失败，请检查 data/jobs.json 是否存在。";
-});
-
-async function bootstrap() {
-  await loadJobs();
-  renderSearchLinks();
-  wireEvents();
-  render();
-}
-
-async function loadJobs() {
-  elements.statusText.textContent = "正在同步岗位...";
-
-  const data = await fetchJsonWithFallback(JOBS_URL, FALLBACK_JOBS_URL);
-  jobs = (data.jobs || [])
-    .filter((job) => DEFAULT_CITIES.includes(job.city))
-    .sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
-
-  hydrateCityOptions(jobs);
-  elements.lastUpdated.textContent = formatTimestamp(data.lastUpdated);
-  elements.statusText.textContent = `已同步 ${jobs.length} 个岗位`;
-  syncSeenJobs(jobs);
-}
-
-function wireEvents() {
-  elements.keywordInput.addEventListener("input", render);
-  elements.cityFilter.addEventListener("change", render);
-  elements.workModeFilter.addEventListener("change", render);
-  elements.ageFilter.addEventListener("change", render);
-  elements.refreshButton.addEventListener("click", async () => {
-    await loadJobs();
-    render();
-  });
-  elements.enableNotificationsButton.addEventListener("click", enableNotifications);
-}
-
-function hydrateCityOptions(items) {
-  const currentValue = elements.cityFilter.value;
-  const cities = [...new Set(items.map((job) => job.city))];
-  elements.cityFilter.innerHTML = '<option value="all">全部城市</option>';
-
-  cities.forEach((city) => {
-    const option = document.createElement("option");
-    option.value = city;
-    option.textContent = city;
-    elements.cityFilter.append(option);
-  });
-
-  if (cities.includes(currentValue)) {
-    elements.cityFilter.value = currentValue;
-  }
-}
-
-function render() {
-  const filteredJobs = jobs.filter(matchesFilters);
-  const newJobs = filteredJobs.filter((job) => !getSeenIds().includes(job.id));
-
-  elements.jobCount.textContent = String(filteredJobs.length);
-  elements.newCount.textContent = String(newJobs.length);
-  elements.jobsGrid.innerHTML = "";
-
-  if (filteredJobs.length === 0) {
-    const emptyState = document.createElement("div");
-    emptyState.className = "empty-state";
-    emptyState.textContent = "当前筛选条件下没有匹配岗位。";
-    elements.jobsGrid.append(emptyState);
-    return;
+    this.init();
   }
 
-  filteredJobs.forEach((job) => {
-    const fragment = elements.jobCardTemplate.content.cloneNode(true);
-    fragment.querySelector(".job-company").textContent = job.company;
-    fragment.querySelector(".job-title").textContent = job.title;
-    fragment.querySelector(".job-age").textContent = timeAgo(job.postedAt);
-    fragment.querySelector(".job-snippet").textContent = job.snippet;
-    fragment.querySelector(".job-source").textContent = `来源：${job.source}`;
+  async init() {
+    this.loadFavorites();
+    await this.loadData();
+    this.renderFilters();
+    this.renderJobs();
+    this.attachEvents();
+    this.updateStats();
+  }
 
-    const link = fragment.querySelector(".job-link");
-    link.href = job.url;
+  async loadData() {
+    try {
+      const response = await fetch('./data/jobs.json');
+      const data = await response.json();
+      this.jobs = data.jobs || [];
+      this.updateMeta(data);
+      this.extractOptions();
+    } catch (err) {
+      console.error('Failed to load jobs:', err);
+      this.jobs = [];
+      document.getElementById('jobs-container').innerHTML = `
+        <div class="no-results">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Failed to load jobs</h3>
+          <p>Check your connection or try refreshing the page.</p>
+        </div>
+      `;
+    }
+  }
 
-    const meta = fragment.querySelector(".job-meta");
-    [
-      job.city,
-      job.state,
-      job.workMode,
-      job.salary || "薪资未公开",
-    ].forEach((value) => {
-      const chip = document.createElement("span");
-      chip.textContent = value;
-      meta.append(chip);
+  updateMeta(data) {
+    if (data.lastUpdated) {
+      const date = new Date(data.lastUpdated);
+      const formatted = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      document.getElementById('last-updated').textContent = formatted;
+    }
+    if (data.sourcesScanned) {
+      document.getElementById('sources-count').textContent = data.sourcesScanned;
+    }
+    if (data.fetchDuration) {
+      document.getElementById('fetch-duration').textContent = data.fetchDuration;
+    }
+  }
+
+  extractOptions() {
+    this.companies.clear();
+    this.cities.clear();
+    this.jobs.forEach(job => {
+      if (job.company) this.companies.add(job.company);
+      if (job.city && job.city !== 'Unknown') this.cities.add(job.city);
+    });
+  }
+
+  renderFilters() {
+    const companySelect = document.getElementById('company');
+    const citySelect = document.getElementById('city');
+
+    // Companies (multi-select)
+    companySelect.innerHTML = '<option value="">All companies</option>';
+    [...this.companies].sort().forEach(company => {
+      const option = document.createElement('option');
+      option.value = company;
+      option.textContent = company;
+      companySelect.appendChild(option);
     });
 
-    elements.jobsGrid.append(fragment);
-  });
-}
+    // Cities
+    citySelect.innerHTML = '<option value="">All cities</option>';
+    [...this.cities].sort().forEach(city => {
+      const option = document.createElement('option');
+      option.value = city;
+      option.textContent = city;
+      citySelect.appendChild(option);
+    });
+  }
 
-function renderSearchLinks() {
-  elements.searchLinksGrid.innerHTML = "";
+  applyFilters() {
+    this.filteredJobs = this.jobs.filter(job => {
+      // Keyword
+      const kw = this.filters.keyword.toLowerCase();
+      if (kw && !(
+        job.title.toLowerCase().includes(kw) ||
+        job.company.toLowerCase().includes(kw) ||
+        (job.snippet && job.snippet.toLowerCase().includes(kw)) ||
+        (job.skills && job.skills.some(s => s.toLowerCase().includes(kw)))
+      )) return false;
 
-  SEARCH_LINKS.forEach((item) => {
-    const card = document.createElement("article");
-    card.className = "source-card";
+      // Company
+      if (this.filters.company.length > 0 && !this.filters.company.includes(job.company)) {
+        return false;
+      }
 
-    const title = document.createElement("h3");
-    title.textContent = item.name;
+      // City
+      if (this.filters.city && job.city !== this.filters.city) {
+        return false;
+      }
 
-    const body = document.createElement("p");
-    body.textContent = "打开这个搜索页，直接看该站点最新的数据分析岗位。";
+      // Work mode
+      if (this.filters.workMode && job.workMode !== this.filters.workMode) {
+        return false;
+      }
 
-    const link = document.createElement("a");
-    link.className = "job-link";
-    link.href = item.url;
-    link.target = "_blank";
-    link.rel = "noreferrer";
-    link.textContent = "打开搜索";
+      // Salary
+      if (this.filters.salary && (!job.salaryRaw || job.salaryRaw < parseInt(this.filters.salary))) {
+        return false;
+      }
 
-    card.append(title, body, link);
-    elements.searchLinksGrid.append(card);
-  });
-}
+      // Posted within
+      if (this.filters.posted) {
+        const days = parseInt(this.filters.posted);
+        if (days < 365) {
+          const cutoff = new Date();
+          cutoff.setDate(cutoff.getDate() - days);
+          if (new Date(job.postedAt) < cutoff) return false;
+        }
+      }
 
-function matchesFilters(job) {
-  const keyword = elements.keywordInput.value.trim().toLowerCase();
-  const city = elements.cityFilter.value;
-  const workMode = elements.workModeFilter.value;
-  const age = elements.ageFilter.value;
+      return true;
+    });
 
-  const matchesKeyword = keyword === "" || [
-    job.title,
-    job.company,
-    job.snippet,
-  ].some((field) => field.toLowerCase().includes(keyword));
-  const matchesCity = city === "all" || job.city === city;
-  const matchesWorkMode = workMode === "all" || job.workMode === workMode;
-  const matchesAge = age === "all" || daysSince(job.postedAt) <= Number(age);
+    this.sortJobs();
+  }
 
-  return matchesKeyword && matchesCity && matchesWorkMode && matchesAge;
-}
+  sortJobs() {
+    const [field, order] = this.filters.sort.split('-');
+    this.filteredJobs.sort((a, b) => {
+      let valA, valB;
 
-async function fetchJsonWithFallback(primaryUrl, fallbackUrl) {
-  try {
-    const primaryResponse = await fetch(primaryUrl, { cache: "no-store" });
-    if (primaryResponse.ok) {
-      return await primaryResponse.json();
+      if (field === 'posted') {
+        valA = new Date(a.postedAt);
+        valB = new Date(b.postedAt);
+      } else if (field === 'salary') {
+        valA = a.salaryRaw || 0;
+        valB = b.salaryRaw || 0;
+      } else if (field === 'company') {
+        valA = a.company.toLowerCase();
+        valB = b.company.toLowerCase();
+      }
+
+      const compare = valA < valB ? -1 : valA > valB ? 1 : 0;
+      return order === 'desc' ? -compare : compare;
+    });
+  }
+
+  renderJobs() {
+    this.applyFilters();
+    const container = document.getElementById('jobs-container');
+    const noResults = document.getElementById('no-results');
+
+    if (this.filteredJobs.length === 0) {
+      container.style.display = 'none';
+      noResults.style.display = 'block';
+      return;
     }
-  } catch (error) {
-    console.warn("Primary job feed unavailable, using fallback.", error);
+
+    container.style.display = 'grid';
+    noResults.style.display = 'none';
+
+    container.className = this.viewMode === 'grid' ? 'jobs-grid' : 'jobs-list';
+    container.innerHTML = this.filteredJobs.map(job => this.renderJobCard(job)).join('');
+
+    this.updateStats();
+    this.attachCardEvents();
   }
 
-  const fallbackResponse = await fetch(fallbackUrl, { cache: "no-store" });
-  return fallbackResponse.json();
+  renderJobCard(job) {
+    const isNew = this.isJobNew(job);
+    const isFavorited = this.favorites.has(job.id);
+    const salaryDisplay = job.salary ? `<span class="job-salary">${job.salary}</span>` : '';
+    const skills = job.skills && job.skills.length > 0
+      ? `<div class="job-skills">${job.skills.map(s => `<span class="skill-tag">${s}</span>`).join('')}</div>`
+      : '';
+
+    return `
+      <div class="job-card ${isNew ? 'new' : ''}" data-id="${job.id}">
+        <div class="job-card-header">
+          <div>
+            <div class="job-company">${job.company}</div>
+            <div class="job-title">${job.title}</div>
+            <div class="job-meta">
+              <span><i class="fas fa-map-marker-alt"></i> ${job.city}, ${job.state}</span>
+              <span><i class="fas fa-laptop-house"></i> ${job.workMode}</span>
+              ${salaryDisplay}
+              <span><i class="fas fa-calendar"></i> ${this.formatDate(job.postedAt)}</span>
+            </div>
+          </div>
+          <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" title="${isFavorited ? 'Remove from saved' : 'Save job'}">
+            <i class="fas fa-star"></i>
+          </button>
+        </div>
+        <div class="job-card-body">
+          <p class="job-snippet">${job.snippet || 'No description available.'}</p>
+          ${skills}
+          <div class="job-actions">
+            <a href="${job.url}" target="_blank" class="job-link">
+              <i class="fas fa-external-link-alt"></i> Apply
+            </a>
+            <small>via ${job.source.split(':')[0]}</small>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  formatDate(iso) {
+    const date = new Date(iso);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  isJobNew(job) {
+    const readIds = JSON.parse(localStorage.getItem('readJobs') || '[]');
+    return !readIds.includes(job.id);
+  }
+
+  markAsRead(jobId) {
+    const readIds = JSON.parse(localStorage.getItem('readJobs') || '[]');
+    if (!readIds.includes(jobId)) {
+      readIds.push(jobId);
+      localStorage.setItem('readJobs', JSON.stringify(readIds));
+    }
+  }
+
+  loadFavorites() {
+    const saved = JSON.parse(localStorage.getItem('favorites') || '[]');
+    this.favorites = new Set(saved);
+    this.renderFavorites();
+  }
+
+  toggleFavorite(jobId) {
+    if (this.favorites.has(jobId)) {
+      this.favorites.delete(jobId);
+    } else {
+      this.favorites.add(jobId);
+    }
+    localStorage.setItem('favorites', JSON.stringify([...this.favorites]));
+    this.renderFavorites();
+    this.updateStats();
+    this.showToast(this.favorites.has(jobId) ? 'Job saved' : 'Job removed');
+  }
+
+  renderFavorites() {
+    const list = document.getElementById('favorites-list');
+    if (this.favorites.size === 0) {
+      list.innerHTML = '<p class="empty-hint">No saved jobs yet</p>';
+      return;
+    }
+
+    const favoriteJobs = this.jobs.filter(j => this.favorites.has(j.id));
+    list.innerHTML = favoriteJobs.map(job => `
+      <div class="favorite-item">
+        <span class="favorite-title" title="${job.company} – ${job.title}">
+          ${job.company}: ${job.title}
+        </span>
+        <button class="favorite-remove" data-id="${job.id}" title="Remove">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.favorite-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleFavorite(btn.dataset.id);
+      });
+    });
+
+    list.querySelectorAll('.favorite-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (!e.target.closest('.favorite-remove')) {
+          const jobId = item.querySelector('.favorite-remove').dataset.id;
+          const jobCard = document.querySelector(`.job-card[data-id="${jobId}"]`);
+          if (jobCard) {
+            jobCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            jobCard.style.animation = 'pulse 1s';
+            setTimeout(() => jobCard.style.animation = '', 1000);
+          }
+        }
+      });
+    });
+  }
+
+  updateStats() {
+    const newCount = this.filteredJobs.filter(j => this.isJobNew(j)).length;
+    document.getElementById('job-count').textContent = this.filteredJobs.length;
+    document.getElementById('new-count').textContent = newCount;
+    document.getElementById('favorite-count').textContent = this.favorites.size;
+  }
+
+  attachEvents() {
+    // Keyword input
+    document.getElementById('keyword').addEventListener('input', (e) => {
+      this.filters.keyword = e.target.value;
+      this.debouncedRender();
+    });
+
+    // Company multi-select
+    document.getElementById('company').addEventListener('change', (e) => {
+      const selected = Array.from(e.target.selectedOptions).map(opt => opt.value).filter(v => v);
+      this.filters.company = selected;
+      this.renderJobs();
+    });
+
+    // Single selects
+    ['city', 'work-mode', 'salary', 'posted', 'sort'].forEach(id => {
+      document.getElementById(id).addEventListener('change', (e) => {
+        this.filters[id.replace('-', '')] = e.target.value;
+        this.renderJobs();
+      });
+    });
+
+    // Buttons
+    document.getElementById('apply-filters').addEventListener('click', () => this.renderJobs());
+    document.getElementById('clear-filters').addEventListener('click', () => this.clearFilters());
+
+    document.getElementById('mark-all-read').addEventListener('click', () => this.markAllRead());
+    document.getElementById('export-favorites').addEventListener('click', () => this.exportFavorites());
+
+    // View toggle
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.viewMode = btn.dataset.view;
+        this.renderJobs();
+      });
+    });
+  }
+
+  attachCardEvents() {
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const jobId = e.target.closest('.job-card').dataset.id;
+        this.toggleFavorite(jobId);
+        btn.classList.toggle('favorited');
+      });
+    });
+
+    document.querySelectorAll('.job-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (!e.target.closest('.favorite-btn') && !e.target.closest('.job-link')) {
+          const jobId = card.dataset.id;
+          this.markAsRead(jobId);
+          card.classList.remove('new');
+          this.updateStats();
+        }
+      });
+    });
+  }
+
+  clearFilters() {
+    this.filters = {
+      keyword: '',
+      company: [],
+      city: '',
+      workMode: '',
+      salary: '',
+      posted: '30',
+      sort: 'posted-desc'
+    };
+    document.getElementById('keyword').value = '';
+    document.getElementById('company').selectedIndex = 0;
+    document.getElementById('city').selectedIndex = 0;
+    document.getElementById('work-mode').selectedIndex = 0;
+    document.getElementById('salary').selectedIndex = 0;
+    document.getElementById('posted').value = '30';
+    document.getElementById('sort').value = 'posted-desc';
+    this.renderJobs();
+  }
+
+  markAllRead() {
+    this.filteredJobs.forEach(job => this.markAsRead(job.id));
+    document.querySelectorAll('.job-card.new').forEach(card => card.classList.remove('new'));
+    this.updateStats();
+    this.showToast('All jobs marked as read');
+  }
+
+  exportFavorites() {
+    const favoriteJobs = this.jobs.filter(j => this.favorites.has(j.id));
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      count: favoriteJobs.length,
+      jobs: favoriteJobs.map(j => ({
+        company: j.company,
+        title: j.title,
+        city: j.city,
+        workMode: j.workMode,
+        salary: j.salary,
+        postedAt: j.postedAt,
+        url: j.url,
+        source: j.source
+      }))
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `daily-push-favorites-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.showToast(`Exported ${favoriteJobs.length} saved jobs`);
+  }
+
+  showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  debouncedRender = this.debounce(() => this.renderJobs(), 300);
+
+  debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
 }
 
-function formatTimestamp(value) {
-  if (!value) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function timeAgo(value) {
-  const days = daysSince(value);
-  if (days <= 0) {
-    return "今天发布";
-  }
-  if (days === 1) {
-    return "1 天前";
-  }
-  return `${days} 天前`;
-}
-
-function daysSince(value) {
-  const millisecondsPerDay = 1000 * 60 * 60 * 24;
-  const now = new Date();
-  const then = new Date(value);
-  return Math.floor((now - then) / millisecondsPerDay);
-}
-
-function getSeenIds() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function syncSeenJobs(items) {
-  const seenIds = getSeenIds();
-  if (seenIds.length === 0) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items.map((job) => job.id)));
-  }
-}
-
-async function enableNotifications() {
-  if (!("Notification" in window)) {
-    elements.statusText.textContent = "当前浏览器不支持通知。";
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    elements.statusText.textContent = "通知权限未开启。";
-    return;
-  }
-
-  const unseenJobs = jobs.filter((job) => !getSeenIds().includes(job.id));
-  if (unseenJobs.length === 0) {
-    elements.statusText.textContent = "目前没有新增岗位。";
-    return;
-  }
-
-  const latestJob = unseenJobs[0];
-  new Notification("美国数据分析岗位更新", {
-    body: `${unseenJobs.length} 个新岗位，最新：${latestJob.title} @ ${latestJob.company}`,
-  });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs.map((job) => job.id)));
-  render();
-}
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  window.jobBoard = new JobBoard();
+});
